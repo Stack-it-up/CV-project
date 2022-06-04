@@ -1,0 +1,16 @@
+feature matching? On hand parts (subimages)
+canny + snakes (for instance segmentation)
+
+morfologici: erosion in scala di grigi. Rimane un corpo grosso alla fine dell'erosion e prima ci sono le appendici che vengono rimosse.
+Multiclassificatore: cascade? Oppure a votazione.
+    Haar features ci danno "gratis" la bounding box
+
+Region growing from seeds detected as features (for segmentation)
+
+scale space: blur dove le mani si vedono abbastanza bene
+
+---------------------------------------------------
+Filippo: tutorial Haar + cascade
+Giorgio: Morphological
+Davide: Feature extraction da dataset esterni e matching ("bag-of-words")
+
