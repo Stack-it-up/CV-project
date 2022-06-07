@@ -14,9 +14,10 @@ void loadImages(vector<Mat>& images, string& folder_path);
 void loadBoundingBox(vector<vector<int>>& bounding_boxes, string& folder_path);
 
 int main(int argc, char** argv) {
-	string train_images_path = "../../Dataset progetto CV - Hand detection _ segmentation/rgb/*.jpg";
-	string train_masks_path = "../../Dataset progetto CV - Hand detection _ segmentation/mask/*.png";
-	string train_bounds_path = "../../Dataset progetto CV - Hand detection _ segmentation/det/*.txt";
+    // Che schifo gli absolute path, ma non mi va di caricare il dataset, anche perché non è quello che andrebbe usato, è solo per prova
+	string train_images_path = "/Users/Davide/Documents/Ingegneria/Magistrale/Computer Vision/Project/Dataset progetto CV - Hand detection _ segmentation/rgb/*.jpg";
+	string train_masks_path = "/Users/Davide/Documents/Ingegneria/Magistrale/Computer Vision/Project/Dataset progetto CV - Hand detection _ segmentation/*.png";
+	string train_bounds_path = "/Users/Davide/Documents/Ingegneria/Magistrale/Computer Vision/Project/Dataset progetto CV - Hand detection _ segmentation/det/*.txt";
 	vector<Mat> train_images;
 	vector<Mat> train_masks;
 	vector<Mat> train_segmented;
@@ -26,8 +27,10 @@ int main(int argc, char** argv) {
 	loadImages(train_images, train_images_path);
 	loadImages(train_masks, train_masks_path);
 
-	computeFeaturesClusters(train_images, train_masks, dictionary);
-	FileStorage fs_read("dictionary.yml", FileStorage::READ);
+	//computeFeaturesClusters(train_images, train_masks, dictionary);
+
+    // Che schifo gli absolute path pt.2, ma non ho capito perché con il relative non lo prende. Ovviamente sistemerò
+	FileStorage fs_read("/Users/Davide/CLionProjects/CV-project/BoW/dictionary.yml", FileStorage::READ);
 	fs_read["vocabulary"] >> dictionary;
 	fs_read.release();
 
@@ -106,10 +109,10 @@ void loadImages(vector<Mat>& images, string& folder_path) {
 
 
 void loadBoundingBox(vector<vector<int>>& bounding_boxes, string& folder_path) {
-	vector<cv::String> file_names;
-	glob(folder_path, file_names, false);
-
-	for (size_t i = 0; i < file_names.size(); i++) {
-
-	}
+//	vector<cv::String> file_names;
+//	glob(folder_path, file_names, false);
+//
+//	for (size_t i = 0; i < file_names.size(); i++) {
+//
+//	}
 }
