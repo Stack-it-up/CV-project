@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
 	fs_read.release();
 
 	// Second part
-	Ptr<DescriptorMatcher> matcher(new FlannBasedMatcher());
+	Ptr<DescriptorMatcher> matcher = BFMatcher::create();
 	Ptr<FeatureDetector> detector = SIFT::create();
 	Ptr<DescriptorExtractor> extractor = SIFT::create();
 	BOWImgDescriptorExtractor bow_de(extractor, matcher);
