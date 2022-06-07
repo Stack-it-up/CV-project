@@ -16,7 +16,7 @@ void loadBoundingBox(vector<vector<int>>& bounding_boxes, string& folder_path);
 int main(int argc, char** argv) {
     // Che schifo gli absolute path, ma non mi va di caricare il dataset, anche perché non è quello che andrebbe usato, è solo per prova
 	string train_images_path = "/Users/Davide/Documents/Ingegneria/Magistrale/Computer Vision/Project/Dataset progetto CV - Hand detection _ segmentation/rgb/*.jpg";
-	string train_masks_path = "/Users/Davide/Documents/Ingegneria/Magistrale/Computer Vision/Project/Dataset progetto CV - Hand detection _ segmentation/*.png";
+	string train_masks_path = "/Users/Davide/Documents/Ingegneria/Magistrale/Computer Vision/Project/Dataset progetto CV - Hand detection _ segmentation/mask/*.png";
 	string train_bounds_path = "/Users/Davide/Documents/Ingegneria/Magistrale/Computer Vision/Project/Dataset progetto CV - Hand detection _ segmentation/det/*.txt";
 	vector<Mat> train_images;
 	vector<Mat> train_masks;
@@ -29,8 +29,7 @@ int main(int argc, char** argv) {
 
 	//computeFeaturesClusters(train_images, train_masks, dictionary);
 
-    // Che schifo gli absolute path pt.2, ma non ho capito perché con il relative non lo prende. Ovviamente sistemerò
-	FileStorage fs_read("/Users/Davide/CLionProjects/CV-project/BoW/dictionary.yml", FileStorage::READ);
+	FileStorage fs_read("BoW/dictionary.yml", FileStorage::READ);
 	fs_read["vocabulary"] >> dictionary;
 	fs_read.release();
 
@@ -41,7 +40,7 @@ int main(int argc, char** argv) {
 	BOWImgDescriptorExtractor bow_de(extractor, matcher);
 	bow_de.setVocabulary(dictionary);
 
-	FileStorage fs("descriptor.yml", FileStorage::WRITE);
+	FileStorage fs("BoW/descriptor.yml", FileStorage::WRITE);
 
 	for (Mat img : train_images) {
 		vector<KeyPoint> keypoints;
@@ -76,10 +75,10 @@ void computeFeaturesClusters(vector<Mat>& train_images, vector<Mat>& train_masks
 		computeSift(image_segmented, keypoints, descriptor);
 		features.push_back(descriptor);
 
-		/*Mat image_keypoints;
-		cv::drawKeypoints(train_images[i], keypoints, image_keypoints);
+		Mat image_keypoints;
+		cv::drawKeypoints(image_segmented, keypoints, image_keypoints);
 		imshow("keypoints", image_keypoints);
-		waitKey(0);*/
+		waitKey(0);
 	}
 
 	int dictionary_size = 10;
