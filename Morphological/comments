@@ -1,4 +1,0 @@
--) Closing seems to be the best method to spot hands' shape in an image --> actually hard to find best
-number of iterations of erosion and dilation in general.
-
--) Skin detection turns out to be quite effective, but need to be tested on more images to adjust thresholds.

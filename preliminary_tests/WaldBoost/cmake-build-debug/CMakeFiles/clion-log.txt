@@ -1,4 +1,0 @@
-/home/filippo/Applications/clion-2021.3.4/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/home/filippo/Applications/clion-2021.3.4/bin/ninja/linux/ninja -G Ninja /home/filippo/CLionProjects/CV-project/preliminary_tests/WaldBoost
--- Configuring done
--- Generating done
--- Build files have been written to: /home/filippo/CLionProjects/CV-project/preliminary_tests/WaldBoost/cmake-build-debug
