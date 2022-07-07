@@ -3,6 +3,7 @@
 //
 
 #include "util.h"
+#include <fstream>
 using namespace cv;
 using namespace std;
 
@@ -28,8 +29,12 @@ double pixel_accuracy(Mat detected, Mat ground_truth) {
 }
 
 vector<Rect> extract_bboxes(string txt_path, int padding=0) {
-    ifstream boxes_txt;
-    boxes_txt.open(txt_path);
+    ifstream boxes_txt = ifstream(txt_path);
+    
+    if(!boxes_txt.is_open()) {
+        cerr << "File not found";
+        return vector<Rect>{};
+    }
 
     vector<Rect> boxes;
     while(!boxes_txt.eof()) {
