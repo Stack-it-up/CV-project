@@ -28,8 +28,8 @@ void compress_range(Mat input, int target_bins, Mat output) {
 
 }
 int main() {
-    string photos_dir = "/home/filippo/Desktop/unipd/4anno/computer_vision/final_project/datasets/Dataset progetto CV - Hand detection _ segmentation/rgb/*.jpg";
-    string bboxes_dir = "/home/filippo/Desktop/unipd/4anno/computer_vision/final_project/datasets/Dataset progetto CV - Hand detection _ segmentation/det/*.txt";
+    string photos_dir = "../res/evaluation_data/rgb/*.jpg";
+    string bboxes_dir = "../res/evaluation_data/det/*.txt";
 
     vector<string> photos_paths;
     vector<string> bbox_paths;
