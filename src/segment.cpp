@@ -14,19 +14,6 @@
 using namespace cv;
 using namespace std;
 
-/**
- * Compresses dynamic range of an image under the assumption that it was equalized
- * @param input CV_8UC1 image
- * @param target_bins number in [1, 255]: number of target bins the modified image will span
- */
-void compress_range(Mat input, int target_bins, Mat output) {
-    CV_Assert(target_bins >= 1);
-    CV_Assert(target_bins <= 255);
-    CV_Assert(input.type()==CV_8UC1);
-
-    int table[255];
-
-}
 int main() {
     string photos_dir = "../res/evaluation_data/rgb/*.jpg";
     string bboxes_dir = "../res/evaluation_data/det/*.txt";
