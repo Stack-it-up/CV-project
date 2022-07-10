@@ -43,7 +43,7 @@ vector<Rect> extract_bboxes(string txt_path, int padding) {
     while(!boxes_txt.eof()) {
         int x, y, w, h; //params of the rectangle to be read from file
         boxes_txt >> x >> y >> w >> h;
-        boxes.push_back(Rect{x+padding, y+padding, w+(2*padding), h+(2*padding)});
+        boxes.push_back(Rect{x-padding, y-padding, w+(2*padding), h+(2*padding)});
     }
     boxes_txt.close();
     return boxes;

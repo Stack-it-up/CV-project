@@ -10,6 +10,7 @@
 #include <fstream>
 #include <iostream>
 #include "Util.h"
+#include "callbacks.h"
 
 using namespace cv;
 using namespace std;
@@ -28,25 +29,76 @@ int main() {
 
     for(int i=20; i<photos_paths.size(); i++) {
         Mat input = imread(photos_paths[i]);
-        Mat hsv{};
-        cvtColor(input, hsv, COLOR_BGR2HSV_FULL);
 
-        bilateralFilter(hsv.clone(), hsv, 5, 20, 12);
+        const char* window_name = "TRACKBAAARS!!";
+        namedWindow(window_name);
+        /*
+       int dim_gauss = 5;
+       int dim = 15;
+       int sigma_color = 1; //divided by 10
+       int sigma_space = 1; //divided by 10
+
+       Data d_gauss {vector<Mat*>{&input, &input},
+                   vector<int*>{&dim_gauss},
+                   window_name
+       };
+       createTrackbar( "dim:", window_name, &dim_gauss, 30, gaussian_threshold, &d_gauss );
+       waitKey();
+
+       Mat input_clone = input.clone();
+       Data d_bil {vector<Mat*>{&input_clone, &input},
+                   vector<int*>{&dim, &sigma_color, &sigma_space},
+                   window_name
+       };
+
+       createTrackbar( "dim:", window_name, &dim, 50, bilateral_threshold, &d_bil );
+       createTrackbar( "sigma_color:", window_name, &sigma_color, 1000, bilateral_threshold, &d_bil );
+       createTrackbar( "sigma_space:", window_name, &sigma_space, 1000, bilateral_threshold, &d_bil );
+       waitKey(0);
+        */
+        //bilateralFilter(input.clone(), input, 10, 80, 15);
+
+        /*
+         * //Luminance equalization, similar to histogram equalization for color images
+         * NO NO BAD IDEA!
+        Mat ycrcb{};
+        cvtColor(input, ycrcb, COLOR_BGR2YCrCb);
 
         Mat channels[3];
-        split(hsv, channels);
+        split(ycrcb, channels);
         equalizeHist(channels[0], channels[0]);
-        //equalizeHist(channels[1], channels[1]);
-        //equalizeHist(channels[2], channels[2]);
+        merge(channels, 3, ycrcb); //for better equalization of color image!!
 
-        merge(channels, 3, hsv);
+        imshow("", input);
+        waitKey();
+        cvtColor(ycrcb, input, COLOR_YCrCb2BGR);
+        imshow("", input);
+        waitKey();
+         */
+        Mat hsv{};
+        cvtColor(input, hsv, COLOR_BGR2HSV_FULL);
+        /*
+        int sp = 1; //divided by 10
+        int sr = 1; //divided by 10
+        int maxlevel = 0;
+        Mat ycrcb_clone = ycrcb.clone();
 
+        Data d {vector<Mat*>{&ycrcb_clone, &ycrcb},
+                      vector<int*>{&sp, &sr, &maxlevel},
+                      window_name
+        };
 
-        pyrMeanShiftFiltering(hsv, hsv, 3, 10, 5);
-        imshow("", hsv);
+        createTrackbar( "spatial radius:", window_name, &sp, 500, meanshift_trackbar, &d );
+        createTrackbar( "color radius:", window_name, &sr, 500, meanshift_trackbar, &d );
+        createTrackbar( "max pyramid level:", window_name, &maxlevel, 8, meanshift_trackbar, &d );
         waitKey(0);
+        */
+        destroyAllWindows();
 
-        vector<Rect> boxes = extract_bboxes(bbox_paths[i]);
+        pyrMeanShiftFiltering(hsv, hsv, 10, 17.5, 1);
+        imshow("", hsv);
+        waitKey();
+        vector<Rect> boxes = extract_bboxes(bbox_paths[i], 10);
 
         vector<Mat> masks(boxes.size());
         for(int j=0; j<boxes.size(); j++) {
@@ -58,7 +110,7 @@ int main() {
                     r,
                     bgmodel,
                     fgmodel,
-                    17,
+                    12,
                     GC_INIT_WITH_RECT
             );
         }
