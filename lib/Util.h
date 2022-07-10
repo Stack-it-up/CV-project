@@ -40,4 +40,11 @@ void show_bboxes(std::string img_path, std::string txt_path);
  * Draws grabcut mask into output
  */
 void drawGrabcutMask(cv::Mat& image, cv::Mat& mask, cv::Mat& output, float transparency_level);
+
+/**
+ * Compute gradient magnitude using L1 norm
+ * @param input
+ * @param magnitude
+ */
+void gradient_mag(cv::Mat& input, cv::Mat& magnitude);
 #endif //UTIL_H

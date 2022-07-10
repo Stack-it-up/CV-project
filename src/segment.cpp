@@ -29,6 +29,8 @@ int main() {
 
     for(int i=20; i<photos_paths.size(); i++) {
         Mat input = imread(photos_paths[i]);
+        Mat input_bw = imread(photos_paths[i], IMREAD_GRAYSCALE);
+        GaussianBlur(input_bw, input_bw, Size{5,5}, 0); //blurring the BW version for gradient calculation
 
         const char* window_name = "TRACKBAAARS!!";
         namedWindow(window_name);
@@ -98,18 +100,18 @@ int main() {
         pyrMeanShiftFiltering(hsv, hsv, 10, 17.5, 1);
         imshow("", hsv);
         waitKey();
-        vector<Rect> boxes = extract_bboxes(bbox_paths[i], 10);
+        vector<Rect> boxes = extract_bboxes(bbox_paths[i], 20);
 
         vector<Mat> masks(boxes.size());
+        vector<Mat> bgm(boxes.size());
+        vector<Mat> fgm(boxes.size());
         for(int j=0; j<boxes.size(); j++) {
             Rect r = boxes[j];
-            Mat bgmodel{};
-            Mat fgmodel{};
             grabCut(hsv,
                     masks[j],
                     r,
-                    bgmodel,
-                    fgmodel,
+                    bgm[j],
+                    fgm[j],
                     12,
                     GC_INIT_WITH_RECT
             );
@@ -121,6 +123,44 @@ int main() {
             imshow("", output);
             waitKey(0);
         }
+
+        //////////////// refinement of the mask /////////////////////
+        //How about otsu + contour tracking?
+        //How about gradient? Let's try with the gradient
+        for(int j=0; j<boxes.size(); j++) {
+            Rect r = boxes[j];
+
+            //we must clip the roi because GOD FORBID opencv could perform some checks
+            if(r.x + r.width > input.cols)
+                r.x = input.cols-r.width;
+            if(r.x < 0)
+                r.x = 0;
+            if(r.y + r.height > input.rows)
+                r.y = input.rows-r.height;
+            if(r.y < 0)
+                r.y = 0;
+
+
+            Mat mag;
+            Mat roi = input_bw(r);
+            namedWindow("grad", WINDOW_NORMAL);
+            /* ok guys gradient has some problems... how about CANNY???
+            gradient_mag(roi, mag);
+
+
+            imshow("grad", mag);
+            waitKey();
+
+            threshold(mag, mag, 180, 255, THRESH_BINARY);
+            imshow("grad", mag);
+            waitKey();
+             */
+            Mat canny{};
+            Canny(roi, canny, 60, 180, 3, true);
+            imshow("grad", canny);
+            waitKey();
+        }
+
 
     }
 }

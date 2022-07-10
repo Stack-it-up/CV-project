@@ -78,3 +78,19 @@ void drawGrabcutMask(Mat& image, Mat& mask, Mat& output, float transparency_leve
     output.create(image.size(), CV_8UC3);
     addWeighted(image, transparency_level, colored_mask, 1-transparency_level, 0, output);
 }
+
+void gradient_mag(cv::Mat& input, cv::Mat& magnitude) {
+    CV_Assert(input.type() == CV_8UC1);
+
+    Mat dx = Mat{input.size(), CV_32F};
+    Mat dy = dx.clone();
+    Mat abs_dx, abs_dy;
+
+    spatialGradient(input, dx, dy);
+    Mat mag{dx.size(), CV_32F};
+    //use L1 approximation of gradient magnitude
+    convertScaleAbs(dx, abs_dx);
+    convertScaleAbs(dy, abs_dy);
+
+    addWeighted(abs_dx, 0.5, abs_dy, 0.5, 0, magnitude);
+}
