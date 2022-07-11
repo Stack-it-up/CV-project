@@ -9,8 +9,8 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
+#include <opencv2/objdetect.hpp>
 #include <random>
-#include "opencv2/objdetect.hpp"
 
 using namespace std;
 using namespace cv;
@@ -20,21 +20,31 @@ void detectAndDisplay(Mat& img, CascadeClassifier& hand_cascade);
 
 int main(int argc, char** argv) {
     CascadeClassifier hand_cascade;
-    String hand_cascade_name = samples::findFile("cascade/cascade.xml");
+
+    String hand_cascade_name = samples::findFile("cascade/cascade_lbp48.xml");
 
     if (!hand_cascade.load(hand_cascade_name)) {
-        cout << "(!) Error loading _cascade" << endl;
+        cout << "(!) Error loading cascade" << endl;
         return -1;
     }
+
+    if (hand_cascade.isOldFormatCascade()) {
+        cout << "(!) Old format cascade detected" << endl;
+        return 1;
+    }
+
+    cout << "Cascade classifier loaded" << endl;
+    cout << "Feature type: " << (hand_cascade.getFeatureType() == 0 ? "HAAR" : "LBP") << endl;
+    cout << "Original window size: " << hand_cascade.getOriginalWindowSize().width << "x" << hand_cascade.getOriginalWindowSize().height << endl;
 
     vector<Mat> test_images;
     string test_images_path = "test/*.jpg";
     loadImages(test_images, test_images_path);
 
-    std::shuffle(test_images.begin(), test_images.end(), std::mt19937(std::random_device()()));
+    // std::shuffle(test_images.begin(), test_images.end(), std::mt19937(std::random_device()()));
 
-    for (int i = 0; i < std::min(10, static_cast<int>(test_images.size())); i++) {
-        detectAndDisplay(test_images[i], hand_cascade);
+    for (auto & test_image : test_images) {
+        detectAndDisplay(test_image, hand_cascade);
     }
 
     return 0;
@@ -42,21 +52,35 @@ int main(int argc, char** argv) {
 
 void detectAndDisplay(Mat& img, CascadeClassifier& hand_cascade) {
     Mat img_gray;
+    Mat img_gray_eq;
+
+    int min_neighbors = 48; // default is 3
+
     cvtColor(img, img_gray, COLOR_BGR2GRAY);
-    equalizeHist(img_gray, img_gray);
+    equalizeHist(img_gray, img_gray_eq);
 
     cout << "Detecting hands..." << endl;
 
     vector<Rect> hands;
-    hand_cascade.detectMultiScale(img_gray, hands);
 
-    cout << "Hands detected: " << hands.size() << endl;
+    hand_cascade.detectMultiScale(img_gray, hands, 1.1, min_neighbors);
+
+    cout << "Hands detected (not eq): " << hands.size() << endl;
 
     for (Rect hand : hands) {
         rectangle(img, hand, Scalar(0, 255, 0));
     }
 
-    imshow("Hand detection result", img);
+    vector<Rect> hands_eq;
+    hand_cascade.detectMultiScale(img_gray_eq, hands_eq, 1.1, min_neighbors);
+
+    cout << "Hands detected (eq): " << hands.size() << endl;
+
+    for (Rect hand : hands_eq) {
+        rectangle(img, hand, Scalar(255, 0, 0));
+    }
+
+    imshow("Hand detection result (blue for equalized image)", img);
     waitKey(0);
 }
 
