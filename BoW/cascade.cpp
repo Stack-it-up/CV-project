@@ -21,7 +21,7 @@ void detectAndDisplay(Mat& img, CascadeClassifier& hand_cascade);
 int main(int argc, char** argv) {
     CascadeClassifier hand_cascade;
 
-    String hand_cascade_name = samples::findFile("cascade/cascade_lbp48.xml");
+    String hand_cascade_name = samples::findFile("cascade/cascade_lbp48_30stage.xml");
 
     if (!hand_cascade.load(hand_cascade_name)) {
         cout << "(!) Error loading cascade" << endl;
@@ -54,7 +54,7 @@ void detectAndDisplay(Mat& img, CascadeClassifier& hand_cascade) {
     Mat img_gray;
     Mat img_gray_eq;
 
-    int min_neighbors = 48; // default is 3
+    int min_neighbors = 3; // default is 3
 
     cvtColor(img, img_gray, COLOR_BGR2GRAY);
     equalizeHist(img_gray, img_gray_eq);
