@@ -62,7 +62,6 @@ void detectAndDisplay(Mat& img, CascadeClassifier& hand_cascade) {
     cout << "Detecting hands..." << endl;
 
     vector<Rect> hands;
-
     hand_cascade.detectMultiScale(img_gray, hands, 1.1, min_neighbors);
 
     cout << "Hands detected (not eq): " << hands.size() << endl;
