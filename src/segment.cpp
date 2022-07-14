@@ -4,6 +4,7 @@
 #include  <opencv2/imgproc.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/features2d.hpp>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -29,8 +30,6 @@ int main() {
 
     for(int i=20; i<photos_paths.size(); i++) {
         Mat input = imread(photos_paths[i]);
-        Mat input_bw = imread(photos_paths[i], IMREAD_GRAYSCALE);
-        GaussianBlur(input_bw, input_bw, Size{5,5}, 0); //blurring the BW version for gradient calculation
 
         const char* window_name = "TRACKBAAARS!!";
         namedWindow(window_name);
@@ -96,13 +95,13 @@ int main() {
         waitKey(0);
         */
         destroyAllWindows();
+        vector<Rect> boxes = extract_bboxes(bbox_paths[i], 10);
+        vector<Mat> masks(boxes.size());
 
         pyrMeanShiftFiltering(hsv, hsv, 10, 17.5, 1);
         imshow("", hsv);
         waitKey();
-        vector<Rect> boxes = extract_bboxes(bbox_paths[i], 20);
 
-        vector<Mat> masks(boxes.size());
         vector<Mat> bgm(boxes.size());
         vector<Mat> fgm(boxes.size());
         for(int j=0; j<boxes.size(); j++) {
@@ -112,25 +111,26 @@ int main() {
                     r,
                     bgm[j],
                     fgm[j],
-                    12,
+                    5,
                     GC_INIT_WITH_RECT
             );
         }
-
+        /*
         for(Mat mask : masks) {
             Mat output{};
             drawGrabcutMask(input, mask, output, 0.5);
             imshow("", output);
             waitKey(0);
-        }
+        }*/
 
         //////////////// refinement of the mask /////////////////////
-        //How about otsu + contour tracking?
-        //How about gradient? Let's try with the gradient
+        Mat input_bw;
+        cvtColor(input, input_bw, COLOR_BGR2GRAY);
+
+        //Let's try with the gradient
         for(int j=0; j<boxes.size(); j++) {
             Rect r = boxes[j];
-
-            //we must clip the roi because GOD FORBID opencv could perform some checks
+            //we must clip the roi because GOD FORBID opencv could clip it automatically
             if(r.x + r.width > input.cols)
                 r.x = input.cols-r.width;
             if(r.x < 0)
@@ -140,27 +140,81 @@ int main() {
             if(r.y < 0)
                 r.y = 0;
 
-
+            //Mat roi = input_bw(r);
+            /* GRADIENT MAGNITUDE AND THRESHOLDING */
+            GaussianBlur(input_bw, input_bw, Size{5,5}, 0);
             Mat mag;
-            Mat roi = input_bw(r);
             namedWindow("grad", WINDOW_NORMAL);
-            /* ok guys gradient has some problems... how about CANNY???
-            gradient_mag(roi, mag);
-
-
+            gradient_mag(input_bw, mag);
             imshow("grad", mag);
             waitKey();
 
-            threshold(mag, mag, 180, 255, THRESH_BINARY);
+            //thresholding the gradient...
+            Mat nonblack = mag != 0;
+            equalizeHist(mag, mag); //to reduce gradient intensity differences
+            mag = mag & nonblack;
+            threshold(mag, mag, 220, 255, THRESH_BINARY);
+            //morphologyEx(mag, mag, MORPH_OPEN, getStructuringElement(MORPH_CROSS, Size{3,3}), Point{-1,-1},2);
+            //morphologyEx(mag, mag, MORPH_ERODE, getStructuringElement(MORPH_CROSS, Size{3,3}));
             imshow("grad", mag);
+            waitKey();
+
+            //assign gradients as "probably background" in the grabcut mask
+            for(int row=0; row<mag.rows; row++) {
+                for(int col=0; col<mag.cols; col++) {
+                    if(mag.at<uchar>(row,col) == 255 && r.contains(Point{col, row}))
+                        masks[j].at<uchar>(row,col) = GC_FGD;
+                }
+            }
+
+
+            /*CANNY
+            Mat edges;
+            Canny(roi, edges, 150, 300);
+            namedWindow("Canny", WINDOW_NORMAL);
+            imshow("Canny", edges);
             waitKey();
              */
-            Mat canny{};
-            Canny(roi, canny, 60, 180, 3, true);
-            imshow("grad", canny);
+
+            /*FIND CONTOUR
+            vector<vector<Point> > contours;
+            vector<Vec4i> hierarchy;
+            findContours( roi, contours, hierarchy,
+                          RETR_CCOMP, CHAIN_APPROX_TC89_L1 );
+            cvtColor(roi, roi, COLOR_GRAY2BGR);
+            int idx = hierarchy[0][0];
+             RNG rand = theRNG();
+            while(idx >= 0) {
+                color = Scalar(rand(256), rand(256), rand(256));
+                drawContours(roi, contours, idx, color, FILLED, 8, hierarchy);
+                idx = hierarchy[idx][0];
+            }
+            imshow("", roi);
             waitKey();
+            */
+
+
         }
 
+        for(int j=0; j<boxes.size(); j++) {
+            Rect r = boxes[j];
+            grabCut(hsv,
+                    masks[j],
+                    r,
+                    bgm[j],
+                    fgm[j],
+                    10,
+                    GC_INIT_WITH_MASK
+            );
+        }
 
+        for(Mat mask : masks) {
+            Mat output{};
+            drawGrabcutMask(input, mask, output, 0.5);
+            imshow("", output);
+            waitKey(0);
+        }
+        /* Forse si può fare qualcosina per "espandere" solo i gradienti che fanno da contorno a "probably foreground"??*/
+        /*MAGARI UN WATERSHED??*/
     }
 }

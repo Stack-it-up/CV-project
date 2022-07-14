@@ -47,4 +47,5 @@ void drawGrabcutMask(cv::Mat& image, cv::Mat& mask, cv::Mat& output, float trans
  * @param magnitude
  */
 void gradient_mag(cv::Mat& input, cv::Mat& magnitude);
+
 #endif //UTIL_H
