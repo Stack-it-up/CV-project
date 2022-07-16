@@ -1,22 +1,21 @@
 //
-// Created by giorgio on 12/07/22.
+// Created by Davide Sarraggiotto on 16/07/2022.
 //
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/dnn.hpp>
 
+#include "detector.h"
+#include <iostream>
+
+using namespace std;
 using namespace cv;
 
-int main() {
+void h_det::detect(cv::dnn::Net& net, cv::Mat& img, std::vector<cv::Rect>& bounding_boxes, std::vector<float>& confidences, float CONF_THRESH) {
+    if (net.empty()) {
+        return;
+    }
 
-    float CONF_THRESH = 0.5, NMS_THRESH = 0.5;
-
-    String cfg = "../cfg/yolov3-tiny-custom.cfg";
-    String weights = "../cfg/yolov3-tiny-custom_last.weights"; //Put the weights file under cfg directory
-
-    dnn::Net net = dnn::readNetFromDarknet(cfg, weights);
-    net.setPreferableTarget(dnn::DNN_TARGET_CPU);
-    net.setPreferableBackend(dnn::DNN_BACKEND_OPENCV);
+    if (img.empty()) {
+        return;
+    }
 
     std::vector<String> layers = net.getLayerNames();
     std::vector<int> indexes = net.getUnconnectedOutLayers();
@@ -27,8 +26,6 @@ int main() {
         int index = indexes[i];
         output_layers.push_back(layers[index - 1]);
     }
-
-    Mat img = imread("../samples/image_2.jpg");
 
     int height = img.rows;
     int width = img.cols;
@@ -44,9 +41,6 @@ int main() {
 
         layer_outputs.push_back(net.forward(output_layers[i]));
     }
-
-    std::vector<Rect> bounding_boxes;
-    std::vector<float> confidences;
 
     for(int i = 0; i < size(layer_outputs); i++) {
 
@@ -74,7 +68,9 @@ int main() {
 
         }
     }
+}
 
+void h_det::show(cv::Mat &img, std::vector<cv::Rect> &bounding_boxes, std::vector<float> confidences, float CONF_THRESH, float NMS_THRESH) {
     std::vector<int> bbox_indexes;
 
     dnn::NMSBoxes(bounding_boxes, confidences, CONF_THRESH, NMS_THRESH, bbox_indexes);
@@ -88,5 +84,25 @@ int main() {
 
     imshow("Detection", img);
     waitKey(0);
-    return 0;
+}
+
+void h_det::detect_and_show(cv::dnn::Net &net, cv::Mat &img, std::vector<cv::Rect> &bounding_boxes, std::vector<float> &confidences, float CONF_THRESH, float NMS_THRESH) {
+    h_det::detect(net, img, bounding_boxes, confidences, CONF_THRESH);
+    h_det::show(img, bounding_boxes, confidences, CONF_THRESH, NMS_THRESH);
+}
+
+void h_det::export_image_bb(cv::Mat& img, std::vector<cv::Rect>& bounding_boxes, std::vector<float>& confidences, const std::string& export_path, float CONF_THRESH, float NMS_THRESH) {
+    std::vector<int> bbox_indexes;
+
+    dnn::NMSBoxes(bounding_boxes, confidences, CONF_THRESH, NMS_THRESH, bbox_indexes);
+
+    for(int i = 0; i < size(bbox_indexes); i++) {
+        int index = bbox_indexes.at(i);
+        Rect bounding_box = bounding_boxes.at(index);
+        Scalar color = Scalar(0,255,0);
+        rectangle(img, bounding_box, color, 2);
+    }
+
+    cout << "-Saving image in " << export_path << endl;
+    imwrite(export_path, img);
 }
