@@ -7,6 +7,7 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/dnn.hpp>
 #include "detector.h"
+#include "Util.h"
 
 using namespace std;
 using namespace cv;
@@ -15,7 +16,7 @@ void loadImages(vector<Mat>& images, string& folder_path, vector<cv::String>& im
 
 int main() {
     String cfg = "../res/cfg/yolov3-tiny-custom.cfg";
-    String weights = "../res/cfg/yolov3-tiny-custom_last.weights"; //Put the weights file under cfg directory
+    String weights = "../res/cfg/yolov3-tiny-custom-mono.weights"; //Put the weights file under cfg directory
     String images_path = "../res/evaluation_data/rgb/*.jpg";
     String export_path = "../out/det/";
     String image_export_path = "../out/bb_img/";
@@ -37,9 +38,9 @@ int main() {
         vector<float> confidences;
 
         h_det::detect(net, image, bounding_boxes, confidences, conf_thresh);
-        // h_det::show(image, bounding_boxes, confidences);
-        h_det::export_bb(bounding_boxes, confidences, export_path + images_names[i] + ".txt", conf_thresh);
-        h_det::export_image_bb(image, bounding_boxes, confidences, image_export_path + images_names[i], conf_thresh);
+        h_det::show(image, bounding_boxes, confidences);
+        //h_det::export_bb(bounding_boxes, confidences, export_path + images_names[i] + ".txt", conf_thresh);
+        //h_det::export_image_bb(image, bounding_boxes, confidences, image_export_path + images_names[i], conf_thresh);
     }
 }
 
