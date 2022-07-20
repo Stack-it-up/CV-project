@@ -11,6 +11,8 @@ add_library( detector STATIC lib/detector.h src/lib/detector.cpp )
 
 add_executable( detect src/detect.cpp )
 add_executable( segment src/segment.cpp )
+add_executable( create_decolored_samples src/create_decolored_samples.cpp )
 
 target_link_libraries( detect util detector ${OpenCV_LIBS} )
 target_link_libraries( segment util callbacks ${OpenCV_LIBS} )
+target_link_libraries( create_decolored_samples ${OpenCV_LIBS} )
