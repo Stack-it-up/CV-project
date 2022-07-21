@@ -14,7 +14,7 @@ namespace h_det {
     void detect(cv::dnn::Net &net, cv::Mat &img, std::vector<cv::Rect> &bounding_boxes, std::vector<float> &confidences,
                 float CONF_THRESH = 0.5);
 
-    void show(cv::Mat &img, std::vector<cv::Rect> &bounding_boxes, std::vector<float> confidences, float CONF_THRESH = 0.5, float NMS_THRESH = 0.5);
+    void show(cv::Mat &img, std::vector<cv::Rect> &bounding_boxes, std::vector<float> &confidences, float CONF_THRESH = 0.5, float NMS_THRESH = 0.5);
 
     void detect_and_show(cv::dnn::Net &net, cv::Mat &img, std::vector<cv::Rect> &bounding_boxes, std::vector<float> &confidences,
                          float CONF_THRESH = 0.5, float NMS_THRESH = 0.5);

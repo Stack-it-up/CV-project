@@ -71,7 +71,7 @@ void h_det::detect(cv::dnn::Net& net, cv::Mat& img, std::vector<cv::Rect>& bound
     }
 }
 
-void h_det::show(cv::Mat &img, std::vector<cv::Rect> &bounding_boxes, std::vector<float> confidences, float CONF_THRESH, float NMS_THRESH) {
+void h_det::show(cv::Mat &img, std::vector<cv::Rect> &bounding_boxes, std::vector<float> &confidences, float CONF_THRESH, float NMS_THRESH) {
     std::vector<int> bbox_indexes;
 
     dnn::NMSBoxes(bounding_boxes, confidences, CONF_THRESH, NMS_THRESH, bbox_indexes);

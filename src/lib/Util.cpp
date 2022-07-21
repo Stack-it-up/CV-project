@@ -14,7 +14,7 @@ using namespace std;
 double IoU_score(Rect detected, Rect ground_truth) {
     Rect I = detected & ground_truth;
     Rect U = detected | ground_truth;
-    return I.area()/U.area();
+    return static_cast<double>(I.area())/static_cast<double>(U.area());
 }
 
 double pixel_accuracy(Mat& detected, Mat& ground_truth) {
