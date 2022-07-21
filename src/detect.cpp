@@ -22,14 +22,14 @@ int main() {
 
     String cfg = "../res/cfg/yolov3-tiny-custom.cfg";
     String weights = "../res/cfg/yolov3-tiny-custom-mono.weights"; //Put the weights file under cfg directory
-    //String weights = "D:\\Documenti\\Ingegneria\\ComputerVision\\darknet-master\\backup\\yolov3-tiny-custom_last.weights";
+    //String weights = "D:\\Documenti\\Ingegneria\\ComputerVision\\darknet-master\\backup\\yolov3-tiny-custom_old.weights";
     String images_path = "../res/evaluation_data/rgb/*.jpg";
     String bounding_boxes_path = "../res/evaluation_data/det/*.txt";
     String export_path = "../out/det/";
     String image_export_path = "../out/bb_img/";
 
-    float conf_thresh = 0.3;
-    float nms_thresh = 0.5;
+    float conf_thresh = 0.1;
+    float nms_thresh = 0.3;
 
     dnn::Net net = dnn::readNetFromDarknet(cfg, weights);
     net.setPreferableTarget(dnn::DNN_TARGET_CPU);
@@ -77,7 +77,7 @@ int main() {
 
         //h_det::show(image, bounding_boxes, confidences, conf_thresh, nms_thresh);
         //h_det::export_bb(bounding_boxes, confidences, export_path + images_names[i] + ".txt", conf_thresh);
-        //h_det::export_image_bb(image, bounding_boxes, confidences, image_export_path + images_names[i], conf_thresh);
+        h_det::export_image_bb(image, bounding_boxes, confidences, image_export_path + images_names[i], conf_thresh, nms_thresh);
 
         IoU += img_IoU;
         cout << "\n";

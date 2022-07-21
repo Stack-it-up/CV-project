@@ -15,7 +15,7 @@ using namespace cv;
 using namespace std;
 
 int main() {
-    string directory = "/home/filippo/Desktop/test/*.jpeg";
+    string directory = "D:/Documenti/Ingegneria/ComputerVision/darknet-master/mixed_data/images_mono/*.jpg";
     vector<string> pics;
     glob(directory, pics);
 
