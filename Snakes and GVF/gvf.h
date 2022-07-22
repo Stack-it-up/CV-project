@@ -1,53 +1,17 @@
 //
 // Created by filippo on 21/07/22.
 //
+
+#ifndef SNAKES_GVF_H
+#define SNAKES_GVF_H
+
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <string>
 #include <vector>
 
-//implementation through vector field convolution (Li & Acton, 2007)
-
-using namespace cv;
-using namespace std;
-
-void compute_vfc(Mat& input, Mat& output_x, Mat& output_y, int k, double gamma=2.4);
-
-int main() {
-    string DIR = "/home/filippo/Desktop/test/*.jpeg";
-    vector<string> imgdirs;
-    glob(DIR, imgdirs);
-
-    vector<Mat> imgs(imgdirs.size());
-    for(int i=0; i<imgdirs.size(); i++) {
-        imgs[i] = imread(imgdirs[i]);
-        cvtColor(imgs[i], imgs[i], COLOR_BGR2GRAY);
-        Mat vfc_x;
-        Mat vfc_y;
-
-        int ker_size = min(imgs[i].rows, imgs[i].cols);
-        ker_size /= 2;
-        if(ker_size%2 == 0)
-            ker_size += 1;
-        compute_vfc(imgs[i], vfc_x, vfc_y, 101, 2.4);
-
-        namedWindow("vfc_x", WINDOW_NORMAL);
-        namedWindow("vfc_y", WINDOW_NORMAL);
-
-        convertScaleAbs(vfc_x, vfc_x);
-        convertScaleAbs(vfc_y, vfc_y);
-
-        //equalizeHist(vfc_x, vfc_x);
-        //equalizeHist(vfc_y, vfc_y);
-
-        imshow("vfc_x", vfc_x);
-        imshow("vfc_y", vfc_y);
-        waitKey();
-    }
-
-
-}
+using namespace cv; //This is BAAAAD
 
 //k is the kernel size
 void compute_vfc(Mat& input, Mat& output_x, Mat& output_y, int k, double gamma) {
@@ -110,4 +74,4 @@ void compute_vfc(Mat& input, Mat& output_x, Mat& output_y, int k, double gamma) 
     filter2D(magnitude, output_x, CV_64F, kx);
     filter2D(magnitude, output_y, CV_64F, ky);
 }
-
+#endif //SNAKES_GVF_H
