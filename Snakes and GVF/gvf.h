@@ -73,5 +73,39 @@ void compute_vfc(Mat& input, Mat& output_x, Mat& output_y, int k, double gamma) 
     //now apply the filtering!! (internally uses the DFT)
     filter2D(magnitude, output_x, CV_64F, kx);
     filter2D(magnitude, output_y, CV_64F, ky);
+
+    //normalize the force using L1 norm (cfr. Gonzalez 11-49)
+    output_x = output_x / (abs(output_x)+abs(output_y)+1e-05);
+    output_y = output_y / (abs(output_x)+abs(output_y)+1e-05);
+
+}
+
+void compute_MOG(Mat& input, Mat& output_x, Mat& output_y) {
+    Mat dx = Mat{input.size(), CV_64F};
+    Mat dy = dx.clone();
+    Mat abs_dx, abs_dy;
+
+    spatialGradient(input, dx, dy);
+    Mat mag{dx.size(), CV_64F};
+
+    //convertScaleAbs(dx, abs_dx);
+    //convertScaleAbs(dy, abs_dy);
+    //use the squared norm of the gradient vector
+    mag = dx.mul(dy) + dy.mul(dy); //elementwise multiplication
+
+    Sobel(mag, dx, CV_64F, 1, 0);
+    Sobel(mag, dy, CV_64F, 0, 1);
+
+    //normalize
+    mag += 1e-05;
+    dx /= mag;
+    dy /= mag;
+
+    //return
+    dx.copyTo(output_x);
+    dy.copyTo(output_y);
+
+    imshow("", dx);
+    waitKey();
 }
 #endif //SNAKES_GVF_H

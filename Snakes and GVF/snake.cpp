@@ -16,39 +16,54 @@ using namespace std;
 
 void create_A(cv::Mat& A, int K, double alpha, double beta); //forward declaration
 
-void compute_snake(vector<Point> const& initial_contour, Mat const& ext_force_x, Mat const& ext_force_y, double alpha, double beta, double gamma, int iters=500) {
+void compute_snake(vector<Point> & initial_contour, Mat const& ext_force_x, Mat const& ext_force_y, double alpha, double beta, double gamma, int iters=500) {
     CV_Assert(initial_contour.size() >= 6); //(otherwise, it won't work for the matrix D4)
     CV_Assert(ext_force_y.type()==CV_64FC1 && ext_force_y.type()==CV_64FC1);
     CV_Assert(alpha>0 && beta>0 && gamma>0);
 
-    int K = initial_contour.size() - 1;
+    int K = initial_contour.size();
     Mat A{};
     create_A(A, K, alpha, beta);
 
     //create the vectors x and y to be premultiplied later
     //x_t contains all the x's of the points in the contour
-    Mat x_t{K, 1, CV_16UC1};
-    Mat y_t{K, 1, CV_16UC1};
+    Mat x_t(K, 1, CV_64FC1); //even though only integers should be inside here
+    Mat y_t(K, 1, CV_64FC1); //idem
     for(int index=0; index<K; index++) {
-        Point p = initial_contour[index];
-        x_t.at<ushort>(index) = p.x;
-        y_t.at<ushort>(index) = p.y;
+        Point p = initial_contour.at(index);
+        x_t.at<double>(index) = static_cast<double>(p.x);
+        y_t.at<double>(index) = static_cast<double>(p.y);
     }
 
+    //cerr << "K: " << K << "\n";
+    Mat Fx = Mat::zeros(K, 1, CV_64FC1);
+    Mat Fy = Mat::zeros(K, 1, CV_64FC1);
     for(int t=1; t<iters; t++) {
-        //create and initialize Fx and Fy
-        Mat Fx{K, 1, CV_64FC1};
-        Mat Fy{K, 1, CV_64FC1};
+        //cerr << "t: " << t << "\n";
+        //cerr << "x_t size: " << x_t.size() << "\n";
+        //cerr << "y_t size: " << y_t.size() << "\n";
+        //initialize Fx and Fy
         for(int i=0; i<K; i++) {
-            int x_coord = x_t.at<ushort>(i);
-            int y_coord = y_t.at<ushort>(i);
-            Fx.at<double>(i) = ext_force_x.at<double>(x_coord, y_coord);
-            Fy.at<double>(i) = ext_force_y.at<double>(x_coord, y_coord);
+            int x_coord = cvRound(x_t.at<double>(i));
+            //cerr << "i: " << i << "\n";
+            //cerr << "x_coord: " << x_coord << "\n";
+            int y_coord = cvRound(y_t.at<double>(i));
+            //cerr << "y_coord: " << y_coord << "\n";
+            Fx.at<double>(i) = abs(ext_force_x.at<double>(x_coord, y_coord));
+            Fy.at<double>(i) = abs(ext_force_y.at<double>(x_coord, y_coord));
         }
         //compute the new vector
         x_t = A * (x_t + gamma*Fx);
+        //cerr << A;
+        //cerr << x_t << "\n";
         y_t = A * (y_t + gamma*Fy);
         //maybe TODO implement early stopping based on convergence rate?
+    }
+    //write out the definitive contours
+    for(int index=0; index<K; index++) {
+        int px = cvRound(x_t.at<double>(index));
+        int py = cvRound(y_t.at<double>(index));
+        initial_contour[index] = Point{px, py};
     }
 }
 
@@ -81,7 +96,6 @@ void create_A(cv::Mat& A, int K, double alpha, double beta) {
         D4.at<double>(row, succ2) = 1;
     }
 
-
     //weighted sum of the two matrices
     Mat D = alpha*D2 - beta*D4;
 
@@ -95,54 +109,46 @@ void create_A(cv::Mat& A, int K, double alpha, double beta) {
 }
 
 int main() {
+    namedWindow("win", WINDOW_NORMAL);
+    string imgdir = "/home/filippo/Desktop/test/beer.jpeg";
+    string imgdir2 = "/home/filippo/Desktop/test/beer2.jpeg";
+    Mat beer = imread(imgdir, IMREAD_COLOR);
+    Mat beer_gray;
+    cvtColor(beer, beer_gray, COLOR_BGR2GRAY);
+    Mat beer2 = imread(imgdir2, IMREAD_GRAYSCALE);
+    threshold(beer2, beer2, 250, 255, THRESH_BINARY);
+    Laplacian(beer2, beer2, CV_8UC1);
+    imshow("win", beer2);
+    waitKey();
 
-    string DIR = "/home/filippo/Desktop/test/*.jpeg";
-    vector<string> imgdirs;
-    glob(DIR, imgdirs);
+    Mat vfc_x;
+    Mat vfc_y;
+    int ker_size = min(beer.rows, beer.cols);
+    //ker_size /= 2;
+    if (ker_size % 2 == 0)
+        ker_size -= 1;
+    compute_vfc(beer_gray, vfc_x, vfc_y, 201, 2);
 
-    vector<Mat> imgs(imgdirs.size());
-    for (int i = 1; i < imgdirs.size(); i++) {
-        imgs[i] = imread(imgdirs[i]);
-        cvtColor(imgs[i], imgs[i], COLOR_BGR2GRAY);
-        //-------------------------------------------------------
-        Mat roi{};
-        threshold(imgs[i], roi, 150, 255, THRESH_BINARY_INV);
-        //-------------------------------------------------------
-        vector<vector<Point>> contours;
-        vector<Vec4i> hierarchy;
-        findContours(roi, contours, hierarchy,
-                     RETR_LIST, CHAIN_APPROX_SIMPLE);
-        cvtColor(roi, roi, COLOR_GRAY2BGR);
-        int idx = hierarchy[0][0];
-        RNG rand{getTickCount()};
-        /*
-        while(idx >= 0) {
-            Scalar color{rand(256), rand(256), rand(256)};
-            drawContours(roi, contours, idx, color, 5, 8, hierarchy);
-            idx = hierarchy[idx][0];
-        }
-        imshow("", roi);
-        waitKey();
-         */
+    Mat fx;
+    Mat fy;
+    compute_MOG(beer_gray, fx, fy);
+    /*
+    vector<Point> fake_snake{};
+    for(int i = 0; i<8; i++)
+        fake_snake.emplace_back(i,i); //Point() is called by emplace_back!
+    fake_snake.emplace_back(0,0); //to make it closed!
+    */
+    Scalar RED{0,0,255};
+    Scalar GREEN{0, 255, 0};
 
+    vector<vector<Point>> contours;
+    findContours(beer2, contours, RETR_LIST, CHAIN_APPROX_NONE);
+    drawContours(beer, contours, 0, RED);
+    imshow("win", beer);
+    waitKey();
 
-        Mat vfc_x;
-        Mat vfc_y;
-        int ker_size = min(imgs[i].rows, imgs[i].cols);
-        ker_size /= 2;
-        if (ker_size % 2 == 0)
-            ker_size += 1;
-        compute_vfc(imgs[i], vfc_x, vfc_y, 101, 2.4);
-
-        /*
-        vector<Point> fake_snake{};
-        for(int i = 0; i<8; i++)
-            fake_snake.emplace_back(i,i); //Point() is called by emplace_back!
-        fake_snake.emplace_back(0,0); //to make it closed!
-        */
-
-        compute_snake(contours[2], vfc_x, vfc_y, 0.5, 0.5, 0.5);
-        Scalar color{rand(256), rand(256), rand(256)};
-        drawContours(roi, contours[2], -1, color);
-    }
+    compute_snake(contours[0], vfc_x, vfc_y, 6, 0.3, 0.15, 1000);
+    drawContours(beer, contours, 0, GREEN);
+    imshow("win", beer);
+    waitKey();
 }
