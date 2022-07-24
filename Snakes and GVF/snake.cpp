@@ -44,7 +44,7 @@ static void on_trackbar( int, void* )
 int main() {
     namedWindow("win", WINDOW_NORMAL);
 
-    hand = imread("/home/filippo/Desktop/test/hand.jpg", IMREAD_COLOR);
+    hand = imread("../hand.jpg", IMREAD_COLOR);
 
     //bbox=Rect{145, 41, 38, 75};
     bbox=Rect{15, 168, 62, 35};
