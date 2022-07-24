@@ -50,7 +50,7 @@ void create_A(cv::Mat& A, int K, double alpha, double beta) {
     tmp.copyTo(A);
 }
 
-void compute_snake(vector<Point> & contour, Mat const& ext_force_x, Mat const& ext_force_y, double alpha, double beta, double gamma, int iters=500) {
+void compute_snake(vector<Point> & contour, Mat const& ext_force_x, Mat const& ext_force_y, double alpha, double beta, double gamma, int iters) {
     CV_Assert(contour.size() >= 6); //(otherwise, it won't work for the matrix D4)
     CV_Assert(ext_force_y.type()==CV_64FC1 && ext_force_y.type()==CV_64FC1);
     CV_Assert(alpha>0 && beta>0 && gamma>0);
@@ -101,7 +101,7 @@ void compute_snake(vector<Point> & contour, Mat const& ext_force_x, Mat const& e
     }
 }
 
-void MOG(Mat& input, Mat& output_x, Mat& output_y) {
+void MOG(Mat const& input, Mat& output_x, Mat& output_y) {
     Mat dx = Mat{input.size(), CV_64F};
     Mat dy = dx.clone();
     Mat abs_dx, abs_dy;
@@ -221,6 +221,8 @@ vector<Point> contour_from_rect(Rect bbox, int step) {
         contour.emplace_back(x, y);
         y -= step;
     }
+
+    return contour;
 }
 
 

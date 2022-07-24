@@ -2,8 +2,8 @@
 // Created by filippo on 24/07/22.
 //
 
-#ifndef SNAKES_SNAKES_H
-#define SNAKES_SNAKES_H
+#ifndef SNAKES_H
+#define SNAKES_H
 
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
@@ -61,4 +61,4 @@ void VFC(cv::Mat const& input, cv::Mat& output_x, cv::Mat& output_y, int k, doub
  *  @param step add a point every step pixels on the line
  */
 std::vector<cv::Point> contour_from_rect(cv::Rect bbox, int step=1);
-#endif //SNAKES_SNAKES_H
+#endif //SNAKES_H

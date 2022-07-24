@@ -17,52 +17,52 @@ using namespace std;
 int main() {
     namedWindow("win", WINDOW_NORMAL);
 
-    Mat beer = imread("/home/filippo/Desktop/test/hand.jpg", IMREAD_COLOR);
-    Mat beer_gray;
-    cvtColor(beer, beer_gray, COLOR_BGR2GRAY);
-    Mat beer2 = imread("/home/filippo/Desktop/test/hand_cont.png", IMREAD_GRAYSCALE);
-    threshold(beer2, beer2, 250, 255, THRESH_BINARY);
-    imshow("win", beer2);
+    Mat hand = imread("/home/filippo/Desktop/test/hand.jpg", IMREAD_COLOR);
+    Mat hand_gray;
+    Rect bbox{145, 41, 38, 75};
+    bbox += Size{10, 10};
+    bbox -= Point(10, 10);
+    Rect bbox2{15, 168, 62, 35};
+    cvtColor(hand, hand_gray, COLOR_BGR2GRAY);
+
+    imshow("win", hand);
     waitKey();
 
-    /*
-    Mat circle = imread("/home/filippo/Desktop/test/circle.jpeg", IMREAD_COLOR);
-    Mat circle_gray;
-    cvtColor(circle, circle_gray, COLOR_BGR2GRAY);
-    */
+    //try with VFC
     Mat vfc_x, vfc_y;
-    int ker_size = max(beer.rows, beer.cols);
-    //ker_size /= 2;
+    int ker_size = max(hand.rows, hand.cols);
+    ker_size /= 2;
     if (ker_size % 2 == 0)
         ker_size -= 1;
-    VFC(beer_gray, vfc_x, vfc_y, 101, 2.4);
+    VFC(hand_gray, vfc_x, vfc_y, ker_size, 2.4);
 
+    //try with MOG
     Mat mog_x, mog_y;
-    MOG(beer_gray, mog_x, mog_y);
+    MOG(hand_gray, mog_x, mog_y);
 
     imshow("mog_x", mog_x);
     imshow("mog_y", mog_y);
     waitKey();
 
+    //plot the initial contour
     Scalar RED{0,0,255};
     Scalar GREEN{0, 255, 0};
+    Scalar BLUE {255, 0, 0};
 
-    vector<vector<Point>> contours;
-    findContours(beer2, contours, RETR_LIST, CHAIN_APPROX_NONE);
-    drawContours(beer, contours, 0, RED);
-    imshow("win", beer);
+    rectangle(hand, bbox, RED);
+    imshow("win", hand);
     waitKey();
 
-    compute_snake(contours[0], mog_x, mog_y, 2, 3, 5, 1000);
-    //subsample the contour
-    vector<Point> subsampled;
-    for(int j=0; j<contours[0].size(); j++) {
-        if(j % 2 == 0)
-            subsampled.push_back(contours[0][j]);
+    //plot the contour found by snakes
+    vector<Point> contour = contour_from_rect(bbox);
+    compute_snake(contour, mog_x, mog_y, 2, 3, 5, 1000);
+
+    for(int j=0; j<contour.size()-1; j++) {
+        imshow("win", hand);
+        waitKey(50);
+        line(hand, contour[j], contour[j+1], GREEN);
     }
-    contours[0] = subsampled;
-
-    drawContours(beer, contours, 0, GREEN);
-    imshow("win", beer);
-    waitKey();
+    line(hand, contour[contour.size()-1], contour[0], GREEN);
+    imshow("win", hand);
+    waitKey(0);
 }
