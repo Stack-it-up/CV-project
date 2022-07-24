@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 2.84)
-project( snakes )
+project( snake_segment )
 find_package( OpenCV REQUIRED )
 include_directories( /usr/local/include/opencv4 )
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable( snake snake.cpp )
-add_executable( gvf gvf.cpp )
+add_library( snakes STATIC snakes.h snakes.cpp)
 
-target_link_libraries( snake ${OpenCV_LIBS} )
-target_link_libraries( gvf ${OpenCV_LIBS} )
+add_executable( snake snake.cpp )
+
+target_link_libraries( snake ${OpenCV_LIBS} snakes)
