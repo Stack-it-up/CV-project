@@ -1,13 +1,20 @@
 //
-// Created by Giorgio on 20/07/22.
+// Created by Giorgio on 23/07/22.
 //
+
+//Exploiting K-means for segmenting a hand and comparisons with Otsu's method.
+//Main issues: 1) Hard to obtain the same cluster for different segmentations using K-means;
+//             2) Otsu's method obtains better results sometimes: hard to choose between Otsu's and K-Means;
+//Best results obtained exploiting the YCbCr color space (by neglecting the Y component for K-Means, using grayscale of YCbCr for Otsu).
+//In case of grayscale image, K-means must consider also the Y component.
+
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <string>
 #include <vector>
 #include <algorithm>
 #include <fstream>
-#include <iostream>
+#include "../include/kmeans.h"
 
 using namespace cv;
 
@@ -52,81 +59,67 @@ int main(int argc, char ** argv) {
     for(int n = 0; n < images.size(); n++) {
 
         Mat src = images[n];
+
+        int count = 0;
+        int use_y = 0;
+
+        for(int i = 0; i < src.rows; i++) {
+            for(int j = 0; j < src.cols; j++) {
+
+                if(src.at<Vec3b>(i,j)[0] == src.at<Vec3b>(i,j)[1] &&
+                   src.at<Vec3b>(i,j)[1] == src.at<Vec3b>(i,j)[2])
+                    count++;
+            }
+        }
+
+        if(count == src.rows * src.cols)
+            use_y = 1;
+
         std::vector<Rect> img_boxes = boxes[n];
+
+        std::vector<Mat> src_patches_kmeans, src_patches_otsu;
+        std::vector<Rect> src_boxes;
+        Mat res_kmeans = Mat::zeros(src.rows, src.cols, CV_8UC1);
+        Mat res_otsu = Mat::zeros(src.rows, src.cols, CV_8UC1);
 
         for(int l = 0; l < img_boxes.size(); l++) {
 
-            Mat patch = src(img_boxes[l]);
+            Mat patch_rgb = src(img_boxes[l]).clone();
 
-            Mat patch_hsv;
-            cvtColor(patch, patch_hsv, COLOR_BGR2HSV);
+            Mat patch_ycrcb;
+            cvtColor(patch_rgb, patch_ycrcb, COLOR_BGR2YCrCb);
 
-            const int feature_dim = 6;
-            cv::Mat points = cv::Mat(patch.rows * patch.cols, feature_dim, CV_32F);
+            Mat patch_ycrcb_gray;
+            cvtColor(patch_ycrcb, patch_ycrcb_gray, COLOR_BGR2GRAY);
 
-            int m = 0;
+            Mat otsu;
+            cv::threshold(patch_ycrcb_gray, otsu, 0, 255, cv::THRESH_OTSU);
 
-            Scalar patch_mean_rgb, patch_stddev_rgb, patch_mean_hsv, patch_stddev_hsv;
-            cv::meanStdDev(patch, patch_mean_rgb, patch_stddev_rgb);
-            cv::meanStdDev(patch_hsv, patch_mean_hsv, patch_stddev_hsv);
+            Mat kmeans_ycrcb;
+            kmeans_ycrcb = k_means(patch_ycrcb, use_y, 1, 1); //K-means only on Cb and Cr components
 
-            for (int i = 0; i < patch.rows; i++) {
-                for (int j = 0; j < patch.cols; j++) {
+            cvtColor(kmeans_ycrcb, kmeans_ycrcb, COLOR_BGR2GRAY);
 
-                    float b = patch.at<cv::Vec3b>(i, j)[0];
-                    float g = patch.at<cv::Vec3b>(i, j)[1];
-                    float r = patch.at<cv::Vec3b>(i, j)[2];
+            src_patches_kmeans.push_back(kmeans_ycrcb);
+            src_patches_otsu.push_back(otsu);
+            src_boxes.push_back(img_boxes[l]);
 
-                    float h = patch_hsv.at<cv::Vec3b>(i, j)[0];
-                    float s = patch_hsv.at<cv::Vec3b>(i, j)[1];
-                    float v = patch_hsv.at<cv::Vec3b>(i, j)[2];
+            imshow("Original", patch_rgb);
+            imshow("Otsu on YCrCb grayscale", otsu);
+            imshow("K-means on Cr Cb", kmeans_ycrcb);
 
-
-                    b = abs(b - patch_mean_rgb[0]) / (patch_stddev_rgb[0] + 0.001);
-                    g = abs(g - patch_mean_rgb[1]) / (patch_stddev_rgb[1] + 0.001);
-                    r = abs(r - patch_mean_rgb[2]) / (patch_stddev_rgb[2] + 0.001);
-
-                    h = abs(h - patch_mean_hsv[0]) / (patch_stddev_hsv[0] + 0.001);
-                    s = abs(s - patch_mean_hsv[1]) / (patch_stddev_hsv[1] + 0.001);
-                    v = abs(v - patch_mean_hsv[2]) / (patch_stddev_hsv[2] + 0.001);
-
-                    points.at<cv::Vec<float, feature_dim>>(m) = cv::Vec<float, feature_dim>(
-                            b,
-                            g,
-                            r,
-                            h,
-                            s,
-                            v);
-
-                    m++;
-                }
-            }
-
-            int k = 2;
-            cv::Mat labels;
-            cv::TermCriteria tmc = cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 25, 0.01);
-            int attempts = 5;
-
-            cv::kmeans(points, k, labels, tmc, attempts, cv::KMEANS_PP_CENTERS);
-
-            for (int i = 0; i < labels.rows; i++) {
-
-                int col = i % patch.cols;
-                int row = (int) i / patch.cols;
-
-                if (labels.at<int>(i, 0) == 0)
-                    patch.at<cv::Vec3b>(row, col) = cv::Vec3b(255, 255, 255);
-
-                else
-                    patch.at<cv::Vec3b>(row, col) = cv::Vec3b(0, 0, 0);
-            }
-
-            cv::imshow("KMeans", patch);
             waitKey(0);
-
         }
 
-        cv::imshow("Image", src);
+
+        for(int z = 0; z < src_patches_kmeans.size(); z++) {
+
+            src_patches_kmeans.at(z).copyTo(res_kmeans(src_boxes[z]));
+            src_patches_otsu.at(z).copyTo(res_otsu(src_boxes[z]));
+        }
+
+        cv::imshow("K-means on Image", res_kmeans);
+        cv::imshow("Otsu on Image", res_otsu);
         waitKey(0);
 
     }
