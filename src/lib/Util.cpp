@@ -95,3 +95,67 @@ void gradient_mag(cv::Mat& input, cv::Mat& magnitude) {
 
     addWeighted(abs_dx, 0.5, abs_dy, 0.5, 0, magnitude);
 }
+
+double avg_IoU_score(vector<Rect> &detected, vector<Rect> &ground_truth, double threshold) {
+    struct Score {
+        double IoU = 0;
+        int det_index = -1;
+    };
+
+    double avg_IoU = 0;
+    int tp = 0;
+    int fp = static_cast<int>(detected.size());
+    int fn = 0;
+
+    vector<vector<double>> all_IoU_scores(ground_truth.size());
+    vector<Score> IoU_scores(ground_truth.size());
+
+    for (vector<double> &det_vec : all_IoU_scores) {
+        det_vec = vector<double>(detected.size());
+    }
+
+    // Compute all IoU scores for ground_truth x detected
+    for (int i = 0; i < ground_truth.size(); i++) {
+        for (int j = 0; j < detected.size(); j++) {
+            all_IoU_scores[i][j] = IoU_score(detected[j], ground_truth[i]);
+        }
+    }
+
+    for (int c_gt = 0; c_gt < ground_truth.size(); c_gt++) {
+        double max_IoU = 0;
+        int gt_index = -1;
+        int det_index = -1;
+
+        // find maximum IoU in matrix all_IoU_scores
+        for (int i = 0; i < ground_truth.size(); i++) {
+            for (int j = 0; j < detected.size(); j++) {
+                if (all_IoU_scores[i][j] > max_IoU) {
+                    max_IoU = all_IoU_scores[i][j];
+                    gt_index = i;
+                    det_index = j;
+                }
+            }
+        }
+
+        if (max_IoU < threshold) {
+            break;
+        }
+
+        if (IoU_scores[gt_index].det_index == -1) {
+            IoU_scores[gt_index].det_index = det_index;
+            IoU_scores[gt_index].IoU = all_IoU_scores[gt_index][det_index];
+
+            avg_IoU += IoU_scores[gt_index].IoU;
+
+            fp--;
+            tp++;
+        }
+
+        all_IoU_scores[gt_index][det_index] = -1;
+    }
+
+    fn = static_cast<int>(IoU_scores.size()) - tp;
+    avg_IoU /= tp + fp + fn;
+
+    return avg_IoU;
+}

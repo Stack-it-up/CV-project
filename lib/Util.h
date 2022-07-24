@@ -18,6 +18,14 @@
 double IoU_score(cv::Rect detected, cv::Rect ground_truth);
 
 /**
+ * Computes average Intersection over Union score
+ * @param detected
+ * @param ground_truth
+ * @param threshold
+ */
+double avg_IoU_score(std::vector<cv::Rect> &detected, std::vector<cv::Rect> &ground_truth, double threshold = 0.5);
+
+/**
  * Returns pixel accuracy assuming the two images are CV_8UC1 and have the same size.
  * Pixel accuracy = # of equal pixels / # of total pixels
  */

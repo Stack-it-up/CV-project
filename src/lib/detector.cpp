@@ -9,7 +9,7 @@
 using namespace std;
 using namespace cv;
 
-void h_det::detect(cv::dnn::Net& net, cv::Mat& img, std::vector<cv::Rect>& bounding_boxes, std::vector<float>& confidences, float CONF_THRESH) {
+void h_det::detect(cv::dnn::Net& net, cv::Mat& img, std::vector<cv::Rect>& bounding_boxes, std::vector<float>& confidences, float CONF_THRESH, float NMS_THRESH) {
     if (net.empty()) {
         return;
     }
@@ -18,6 +18,8 @@ void h_det::detect(cv::dnn::Net& net, cv::Mat& img, std::vector<cv::Rect>& bound
         return;
     }
 
+    std::vector<Rect> all_bounding_boxes;
+    std::vector<float> all_confidences;
     std::vector<String> layers = net.getLayerNames();
     std::vector<int> indexes = net.getUnconnectedOutLayers();
     std::vector<String> output_layers;
@@ -63,22 +65,27 @@ void h_det::detect(cv::dnn::Net& net, cv::Mat& img, std::vector<cv::Rect>& bound
 
                 Rect bounding_box = Rect(x, y,w,h);
 
-                bounding_boxes.push_back(bounding_box);
-                confidences.push_back(confidence);
+                all_bounding_boxes.push_back(bounding_box);
+                all_confidences.push_back(confidence);
             }
 
         }
     }
-}
 
-void h_det::show(cv::Mat &img, std::vector<cv::Rect> &bounding_boxes, std::vector<float> &confidences, float CONF_THRESH, float NMS_THRESH) {
     std::vector<int> bbox_indexes;
-
-    dnn::NMSBoxes(bounding_boxes, confidences, CONF_THRESH, NMS_THRESH, bbox_indexes);
+    dnn::NMSBoxes(all_bounding_boxes, all_confidences, CONF_THRESH, NMS_THRESH, bbox_indexes);
 
     for(int i = 0; i < size(bbox_indexes); i++) {
         int index = bbox_indexes.at(i);
-        Rect bounding_box = bounding_boxes.at(index);
+        Rect bounding_box = all_bounding_boxes[index];
+        bounding_boxes.push_back(bounding_box);
+        confidences.push_back(all_confidences[index]);
+    }
+}
+
+void h_det::show(cv::Mat &img, std::vector<cv::Rect> &bounding_boxes) {
+    for(int i = 0; i < size(bounding_boxes); i++) {
+        Rect bounding_box = bounding_boxes[i];
         Scalar color = Scalar(0,255,0);
         rectangle(img, bounding_box, color, 2);
     }
@@ -89,19 +96,15 @@ void h_det::show(cv::Mat &img, std::vector<cv::Rect> &bounding_boxes, std::vecto
 
 void h_det::detect_and_show(cv::dnn::Net &net, cv::Mat &img, std::vector<cv::Rect> &bounding_boxes, std::vector<float> &confidences, float CONF_THRESH, float NMS_THRESH) {
     h_det::detect(net, img, bounding_boxes, confidences, CONF_THRESH);
-    h_det::show(img, bounding_boxes, confidences, CONF_THRESH, NMS_THRESH);
+    h_det::show(img, bounding_boxes);
 }
 
 void h_det::export_bb(std::vector<cv::Rect>& bounding_boxes, std::vector<float>& confidences, const std::string& export_path, float CONF_THRESH, float NMS_THRESH) {
-    std::vector<int> bbox_indexes;
     ofstream output;
     output.open (export_path);
 
-    dnn::NMSBoxes(bounding_boxes, confidences, CONF_THRESH, NMS_THRESH, bbox_indexes);
-
-    for(int i = 0; i < size(bbox_indexes); i++) {
-        int index = bbox_indexes.at(i);
-        Rect bounding_box = bounding_boxes.at(index);
+    for(int i = 0; i < size(bounding_boxes); i++) {
+        Rect bounding_box = bounding_boxes.at(i);
         output << bounding_box.x << " " << bounding_box.y << " " << bounding_box.width << " " << bounding_box.height << "\n";
     }
 
@@ -109,13 +112,8 @@ void h_det::export_bb(std::vector<cv::Rect>& bounding_boxes, std::vector<float>&
 }
 
 void h_det::export_image_bb(cv::Mat& img, std::vector<cv::Rect>& bounding_boxes, std::vector<float>& confidences, const std::string& export_path, float CONF_THRESH, float NMS_THRESH) {
-    std::vector<int> bbox_indexes;
-
-    dnn::NMSBoxes(bounding_boxes, confidences, CONF_THRESH, NMS_THRESH, bbox_indexes);
-
-    for(int i = 0; i < size(bbox_indexes); i++) {
-        int index = bbox_indexes.at(i);
-        Rect bounding_box = bounding_boxes.at(index);
+    for(int i = 0; i < size(bounding_boxes); i++) {
+        Rect bounding_box = bounding_boxes.at(i);
         Scalar color = Scalar(0,255,0);
         rectangle(img, bounding_box, color, 2);
     }
