@@ -184,8 +184,9 @@ void VFC(Mat const& input, Mat& output_x, Mat& output_y, int k, double gamma) {
     filter2D(magnitude, output_y, CV_64F, ky);
 
     //normalize the force using L1 norm (cfr. Gonzalez 11-49)
-    output_x = -output_x / (abs(output_x)+abs(output_y)+1e-05);
-    output_y = -output_y / (abs(output_x)+abs(output_y)+1e-05);
+    Mat L1 = abs(output_x)+abs(output_y)+1e-05;
+    output_x = -output_x / L1;
+    output_y = -output_y / L1;
 }
 
 vector<Point> contour_from_rect(Rect bbox, int step) {

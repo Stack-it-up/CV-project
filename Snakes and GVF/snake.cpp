@@ -12,36 +12,67 @@
 #include "snakes.h"
 
 using namespace cv;
-using namespace std;
+using std::vector;
+
+//TODO rimuovere variabili globali
+const int maxvalue = 100;
+int alpha_slider=1, beta_slider=1, gamma_slider=1;
+double alpha;
+double beta;
+double g;
+Mat hand, vfc_x, vfc_y;
+Mat dst;
+vector<Point> contour;
+Rect bbox;
+
+static void on_trackbar( int, void* )
+{
+    contour = contour_from_rect(bbox);
+    alpha = (double) alpha_slider/maxvalue ;
+    beta = (double) beta_slider/maxvalue;
+    g = (double) gamma_slider/maxvalue;
+
+    dst = hand.clone();
+    compute_snake(contour, vfc_x, vfc_y, alpha, beta, g, 800);
+    for(int j=0; j<contour.size()-1; j++) {
+        line(dst, contour[j], contour[j+1], Scalar{0,255,0});
+    }
+    line(dst, contour[contour.size()-1], contour[0], {0,255,0});
+    imshow( "win", dst );
+}
 
 int main() {
     namedWindow("win", WINDOW_NORMAL);
 
-    Mat hand = imread("/home/filippo/Desktop/test/hand.jpg", IMREAD_COLOR);
-    Mat hand_gray;
-    Rect bbox{145, 41, 38, 75};
+    hand = imread("/home/filippo/Desktop/test/hand.jpg", IMREAD_COLOR);
+
+    //bbox=Rect{145, 41, 38, 75};
+    bbox=Rect{15, 168, 62, 35};
     bbox += Size{10, 10};
     bbox -= Point(10, 10);
-    Rect bbox2{15, 168, 62, 35};
-    cvtColor(hand, hand_gray, COLOR_BGR2GRAY);
+
 
     imshow("win", hand);
     waitKey();
 
+    Mat hand_gray;
+    cvtColor(hand, hand_gray, COLOR_BGR2GRAY);
     //try with VFC
-    Mat vfc_x, vfc_y;
+    //Mat vfc_x, vfc_y;
     int ker_size = max(hand.rows, hand.cols);
     ker_size /= 2;
     if (ker_size % 2 == 0)
         ker_size -= 1;
     VFC(hand_gray, vfc_x, vfc_y, ker_size, 2.4);
 
+    /*
     //try with MOG
     Mat mog_x, mog_y;
     MOG(hand_gray, mog_x, mog_y);
+     */
 
-    imshow("mog_x", mog_x);
-    imshow("mog_y", mog_y);
+    imshow("vfc_x", vfc_x);
+    imshow("vfc_y", vfc_y);
     waitKey();
 
     //plot the initial contour
@@ -54,15 +85,19 @@ int main() {
     waitKey();
 
     //plot the contour found by snakes
-    vector<Point> contour = contour_from_rect(bbox);
-    compute_snake(contour, mog_x, mog_y, 2, 3, 5, 1000);
+    contour = contour_from_rect(bbox);
+    /*
+    compute_snake(contour, vfc_x, vfc_y, 0.8, 0.01, 5, 200);
 
     for(int j=0; j<contour.size()-1; j++) {
-        imshow("win", hand);
-        waitKey(50);
         line(hand, contour[j], contour[j+1], GREEN);
     }
     line(hand, contour[contour.size()-1], contour[0], GREEN);
     imshow("win", hand);
     waitKey(0);
+     */
+    createTrackbar("alpha", "win", &alpha_slider, 10*maxvalue, on_trackbar);
+    createTrackbar("bets", "win", &beta_slider, 10*maxvalue, on_trackbar);
+    createTrackbar("gamma", "win", &gamma_slider, 10*maxvalue, on_trackbar);
+    waitKey();
 }
