@@ -56,7 +56,7 @@ void compute_vfc(Mat& input, Mat& output_x, Mat& output_y, int k, double gamma) 
     constexpr double EPSILON = 1e-05;
 
     Mat magnitude{};
-    //TODO use the gradient mag function inside Util (copy-pasted here for convenience)
+
     CV_Assert(input.type() == CV_8UC1);
 
     Mat dx = Mat{input.size(), CV_64F};

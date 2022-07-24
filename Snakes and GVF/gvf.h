@@ -20,7 +20,6 @@ void compute_vfc(Mat& input, Mat& output_x, Mat& output_y, int k, double gamma) 
     constexpr double EPSILON = 1e-05;
 
     Mat magnitude{};
-    //TODO use the gradient mag function inside Util (copy-pasted here for convenience)
     CV_Assert(input.type() == CV_8UC1);
 
     Mat dx = Mat{input.size(), CV_64F};
@@ -30,14 +29,11 @@ void compute_vfc(Mat& input, Mat& output_x, Mat& output_y, int k, double gamma) 
     spatialGradient(input, dx, dy);
     Mat mag{dx.size(), CV_64F};
 
-    convertScaleAbs(dx, abs_dx);
-    convertScaleAbs(dy, abs_dy);
     //use L1 approximation of gradient magnitude
-    addWeighted(abs_dx, 0.5, abs_dy, 0.5, 0, magnitude);
+    addWeighted(abs(dx), 0.5, abs(dy), 0.5, 0, magnitude);
     //-----------------------------------------------
 
     //now that we have the gradient magnitude:
-    //there might be efficiency considerations wrt size of the matrix... see opencv docs for dft()
     Mat nx{Size(k,k), CV_64FC1};
     Mat ny = nx.clone();
 
@@ -69,14 +65,13 @@ void compute_vfc(Mat& input, Mat& output_x, Mat& output_y, int k, double gamma) 
     kx = m.mul(nx);
     ky = m.mul(ny);
 
-
     //now apply the filtering!! (internally uses the DFT)
     filter2D(magnitude, output_x, CV_64F, kx);
     filter2D(magnitude, output_y, CV_64F, ky);
 
     //normalize the force using L1 norm (cfr. Gonzalez 11-49)
-    output_x = output_x / (abs(output_x)+abs(output_y)+1e-05);
-    output_y = output_y / (abs(output_x)+abs(output_y)+1e-05);
+    output_x = -output_x / (abs(output_x)+abs(output_y)+1e-05);
+    output_y = -output_y / (abs(output_x)+abs(output_y)+1e-05);
 
 }
 

@@ -45,12 +45,20 @@ void compute_snake(vector<Point> & initial_contour, Mat const& ext_force_x, Mat 
         //initialize Fx and Fy
         for(int i=0; i<K; i++) {
             int x_coord = cvRound(x_t.at<double>(i));
+            if(x_coord < 0)
+                x_coord = 0;
+            else if(x_coord > ext_force_x.cols)
+                x_coord = ext_force_x.cols;
             //cerr << "i: " << i << "\n";
             //cerr << "x_coord: " << x_coord << "\n";
             int y_coord = cvRound(y_t.at<double>(i));
+            if(y_coord < 0)
+                y_coord = 0;
+            else if(y_coord > ext_force_x.rows)
+                y_coord = ext_force_x.rows;
             //cerr << "y_coord: " << y_coord << "\n";
-            Fx.at<double>(i) = abs(ext_force_x.at<double>(x_coord, y_coord));
-            Fy.at<double>(i) = abs(ext_force_y.at<double>(x_coord, y_coord));
+            Fx.at<double>(i) = ext_force_x.at<double>(y_coord, x_coord);
+            Fy.at<double>(i) = ext_force_y.at<double>(y_coord, x_coord);
         }
         //compute the new vector
         x_t = A * (x_t + gamma*Fx);
@@ -108,30 +116,42 @@ void create_A(cv::Mat& A, int K, double alpha, double beta) {
     tmp.copyTo(A);
 }
 
+void greedy_snake(vector<Point> & initial_contour,
+                  Mat const& ext_force_x,
+                  Mat const& ext_force_y,
+                  double alpha, double beta, double gamma,
+                  int iters=500)
+                  {
+    Mat A;
+}
+
 int main() {
     namedWindow("win", WINDOW_NORMAL);
-    string imgdir = "/home/filippo/Desktop/test/beer.jpeg";
-    string imgdir2 = "/home/filippo/Desktop/test/beer2.jpeg";
-    Mat beer = imread(imgdir, IMREAD_COLOR);
+
+    Mat beer = imread("/home/filippo/Desktop/test/hand.png", IMREAD_COLOR);
     Mat beer_gray;
     cvtColor(beer, beer_gray, COLOR_BGR2GRAY);
-    Mat beer2 = imread(imgdir2, IMREAD_GRAYSCALE);
+    Mat beer2 = imread("/home/filippo/Desktop/test/hand_cont.png", IMREAD_GRAYSCALE);
     threshold(beer2, beer2, 250, 255, THRESH_BINARY);
-    Laplacian(beer2, beer2, CV_8UC1);
     imshow("win", beer2);
     waitKey();
 
+    /*
+    Mat circle = imread("/home/filippo/Desktop/test/circle.jpeg", IMREAD_COLOR);
+    Mat circle_gray;
+    cvtColor(circle, circle_gray, COLOR_BGR2GRAY);
+    */
     Mat vfc_x;
     Mat vfc_y;
     int ker_size = min(beer.rows, beer.cols);
     //ker_size /= 2;
     if (ker_size % 2 == 0)
         ker_size -= 1;
-    compute_vfc(beer_gray, vfc_x, vfc_y, 201, 2);
+    compute_vfc(beer_gray, vfc_x, vfc_y, 501, 2.4);
 
-    Mat fx;
-    Mat fy;
-    compute_MOG(beer_gray, fx, fy);
+    imshow("vfc_x", vfc_x);
+    imshow("vfc_y", vfc_y);
+    waitKey();
     /*
     vector<Point> fake_snake{};
     for(int i = 0; i<8; i++)
@@ -147,7 +167,15 @@ int main() {
     imshow("win", beer);
     waitKey();
 
-    compute_snake(contours[0], vfc_x, vfc_y, 6, 0.3, 0.15, 1000);
+    compute_snake(contours[0], vfc_x, vfc_y, 0.7, 2, 4, 1000);
+    //subsample the contour
+    vector<Point> subsampled;
+    for(int j=0; j<contours[0].size(); j++) {
+        if(j % 5 == 0)
+            subsampled.push_back(contours[0][j]);
+    }
+    contours[0] = subsampled;
+
     drawContours(beer, contours, 0, GREEN);
     imshow("win", beer);
     waitKey();
