@@ -33,7 +33,7 @@ void h_det::detect(cv::dnn::Net& net, cv::Mat& img, std::vector<cv::Rect>& bound
     int height = img.rows;
     int width = img.cols;
 
-    double scale = 0.00392;
+    constexpr double scale = 0.00392;
     Size sz = Size(416,416);
     Mat blob = dnn::blobFromImage(img, scale, sz, Scalar(), true);
     net.setInput(blob);

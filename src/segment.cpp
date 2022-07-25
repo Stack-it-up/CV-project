@@ -29,22 +29,23 @@ int main() {
     sort(photos_paths.begin(), photos_paths.end());
     sort(bbox_paths.begin(), bbox_paths.end());
 
-    for(int i=20; i<photos_paths.size(); i++) {
+    for(int i=5; i<photos_paths.size(); i++) {
         Mat input = imread(photos_paths[i]);
         vector<Rect> boxes = extract_bboxes(bbox_paths[i], 10);
         const char* window_name = "win";
-        namedWindow(window_name);
+        namedWindow(window_name, WINDOW_NORMAL);
 
         //// Initial segmentation with meanshift in HSV colorspace //////
         Mat hsv{};
         cvtColor(input, hsv, COLOR_BGR2HSV_FULL);
 
         pyrMeanShiftFiltering(hsv, hsv, 20, 17.5, 2);
-        imshow("", hsv);
-        waitKey();
+        imshow(window_name, hsv);
+        waitKey(0);
 
         //////////////// Mask intialization with snakes //////////////////
-        vector<Mat> masks(boxes.size()); //contains all bounding boxes detected in the image
+        vector<Mat> masks_snake(boxes.size()); //contains all bounding boxes detected in the image
+        vector<Mat> masks_gc(boxes.size());
         Mat input_gray;
         cvtColor(input, input_gray, COLOR_BGR2GRAY);
 
@@ -55,55 +56,62 @@ int main() {
         if (ker_size % 2 == 0)
             ker_size -= 1;
         VFC(input_gray, vfc_x, vfc_y, ker_size, 2.4);
+        imshow(window_name, abs(vfc_x));
+        waitKey();
 
         for(int j=0; j<boxes.size(); j++) {
-            masks[j] = Mat{input.size(), CV_8UC1, GC_BGD}; //initialize the mask as "definitely background"
+            masks_snake[j] = Mat{input.size(), CV_8UC1, GC_BGD}; //initialize the mask as "definitely background"
             vector<Point> contour = contour_from_rect(boxes[j]);
-            fillConvexPoly(masks[j], contour, GC_PR_BGD); //initialize the rectangle as "probably background"
+            fillConvexPoly(masks_snake[j], contour, GC_PR_BGD); //initialize the rectangle as "probably background"
 
             //DEBUG
             Mat tmp;
-            drawGrabcutMask(input, masks[j], tmp, 0.5);
+            drawGrabcutMask(input, masks_snake[j], tmp, 0.5);
             imshow(window_name, tmp);
-            waitKey();
+            waitKey(2000);
             //TODO remove debug statement
 
             //compute the snake from the rectangle
-            compute_snake(contour, vfc_x, vfc_y, 1, 0.5, 10, 500);
-            fillPoly(masks[j], contour, GC_PR_FGD);
+            compute_snake(contour, vfc_x, vfc_y, 0.3, 0.5, 2, 500);
+            fillPoly(masks_snake[j], contour, GC_PR_FGD);
 
             //DEBUG
-            drawGrabcutMask(input, masks[j], tmp, 0.5);
+            drawGrabcutMask(input, masks_snake[j], tmp, 0.5);
             imshow(window_name, tmp);
-            waitKey();
+            waitKey(2000);
             //TODO remove debug statement
         }
 
         // Possibly TODO adaptive threshold selection by measuring the area variation of the snake
 
 
-        /*
         ////////// Segmentation with grabcut (mask-initialized) /////////
-        vector<Mat> bgm(boxes.size());
-        vector<Mat> fgm(boxes.size());
         for(int j=0; j<boxes.size(); j++) {
+            Mat bgm, fgm;
             Rect r = boxes[j];
             grabCut(hsv,
-                    masks[j],
+                    masks_snake[j],
                     r,
-                    bgm[j],
-                    fgm[j],
-                    5,
-                    GC_INIT_WITH_RECT
+                    bgm,
+                    fgm,
+                    8,
+                    GC_INIT_WITH_MASK
             );
         }
 
-        for(Mat mask : masks) {
+        for(Mat mask : masks_snake) {
             Mat output{};
             drawGrabcutMask(input, mask, output, 0.5);
-            imshow("", output);
-            waitKey(0);
+            imshow(window_name, output);
+            waitKey(2000);
         }
-        */
+        /*
+        for(int index=0; index < masks_gc.size(); index++) {
+            Mat final_mask;
+            final_mask = (masks_snake[index]==GC_PR_FGD) & (masks_gc[index]==GC_PR_FGD);
+            imshow(window_name, 0.5*final_mask+0.5*input_gray);
+            waitKey();
+        }
+         */
     }
 }

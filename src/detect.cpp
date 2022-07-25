@@ -28,9 +28,9 @@ int main() {
     String export_path = "../out/det/";
     String image_export_path = "../out/bb_img/";
 
-    float conf_thresh = 0.2;
-    float nms_thresh = 0.3;
-    double IoU_thresh = 0.2;
+    constexpr float conf_thresh = 0.2;
+    constexpr float nms_thresh = 0.3;
+    constexpr double IoU_thresh = 0.2;
 
     dnn::Net net = dnn::readNetFromDarknet(cfg, weights);
     net.setPreferableTarget(dnn::DNN_TARGET_CPU);

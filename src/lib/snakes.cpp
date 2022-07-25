@@ -78,12 +78,12 @@ void compute_snake(vector<Point> & contour, Mat const& ext_force_x, Mat const& e
             if(x_coord < 0)
                 x_coord = 0;
             else if(x_coord > ext_force_x.cols)
-                x_coord = ext_force_x.cols;
+                x_coord = ext_force_x.cols-1;
             int y_coord = cvRound(y_t.at<double>(i));
             if(y_coord < 0)
                 y_coord = 0;
             else if(y_coord > ext_force_x.rows)
-                y_coord = ext_force_x.rows;
+                y_coord = ext_force_x.rows-1;
 
 
             Fx.at<double>(i) = ext_force_x.at<double>(y_coord, x_coord);
@@ -136,17 +136,18 @@ void VFC(Mat const& input, Mat& output_x, Mat& output_y, int k, double gamma) {
     Mat magnitude{};
     CV_Assert(input.type() == CV_8UC1);
 
+    /*
     Mat dx = Mat{input.size(), CV_64F};
     Mat dy = dx.clone();
     Mat abs_dx, abs_dy;
 
     spatialGradient(input, dx, dy);
-    Mat mag{dx.size(), CV_64F};
 
     //use L1 approximation of gradient magnitude
     addWeighted(abs(dx), 0.5, abs(dy), 0.5, 0, magnitude);
     //-----------------------------------------------
-
+    */
+    Canny(input, magnitude, 50, 100, 3, true);
     //now that we have the gradient magnitude:
     Mat nx{Size(k,k), CV_64FC1};
     Mat ny = nx.clone();
