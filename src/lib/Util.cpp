@@ -151,7 +151,9 @@ double avg_IoU_score(vector<Rect> &detected, vector<Rect> &ground_truth, double 
             tp++;
         }
 
-        all_IoU_scores[gt_index][det_index] = -1;
+        for (int i = 0; i < ground_truth.size(); i++) {
+            all_IoU_scores[i][det_index] = -1;
+        }
     }
 
     fn = static_cast<int>(IoU_scores.size()) - tp;
