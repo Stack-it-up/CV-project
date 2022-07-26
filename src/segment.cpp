@@ -29,8 +29,8 @@ int main() {
     sort(photos_paths.begin(), photos_paths.end());
     sort(bbox_paths.begin(), bbox_paths.end());
 
-    for(int i=11; i<photos_paths.size(); i++) {
-        constexpr double scale_XXL = 1.1;
+    for(int i=5; i<photos_paths.size(); i++) {
+        constexpr double scale_XXL = 1.0;
         constexpr double scale_XXS = 0.7;
         Mat input = imread(photos_paths[i]);
         vector<Rect> boxes_XXL = extract_bboxes(bbox_paths[i], scale_XXL);
@@ -41,9 +41,9 @@ int main() {
         //// Initial segmentation with meanshift in HSV colorspace //////
         Mat hsv{};
         cvtColor(input, hsv, COLOR_BGR2HSV_FULL);
-        pyrMeanShiftFiltering(hsv, hsv, 15, 12, 2);
+        pyrMeanShiftFiltering(input, hsv, 20, 12, 1);
         imshow(window_name, hsv);
-        waitKey(0);
+        waitKey(1000);
 
         //////////////// Mask intialization with snakes //////////////////
         vector<Mat> masks(boxes_XXL.size()); //contains all bounding boxes detected in the image
@@ -64,12 +64,15 @@ int main() {
             vector<Point> contour = contour_from_rect(boxes_XXL[j]);
             fillConvexPoly(masks[j], contour, GC_PR_BGD); //initialize the rectangle as "probably background"
 
+
             //DEBUG
             Mat tmp;
+            /*
             drawGrabcutMask(input, masks[j], tmp, 0.5);
             imshow(window_name, tmp);
             waitKey(1000);
             //TODO remove debug statement
+             */
 
             //compute the snake from a smaller rectangle
             contour = contour_from_rect(boxes_XXS[j]);
@@ -102,7 +105,7 @@ int main() {
 
                 if (n_fgd < 0.1 * n_pixels) {
                     mode = GC_INIT_WITH_RECT;
-                    cerr << "[WARN] Less than 10% of the pixels in the mask are identified as foreground!\n" <<
+                    cerr << "[WARN] Less than 10% of the pixels in the bbox are identified as foreground! " <<
                     "Proceeding with rectangle intialization...\n\n";
                 }
 
@@ -119,21 +122,14 @@ int main() {
             }
         }
 
-        Mat final_mask = Mat::zeros(input.size(), CV_8UC1);
-        for(Mat& mask : masks) { //join all masks
-           final_mask = final_mask | (mask==GC_PR_FGD | mask==GC_FGD);
+        //keep only the largest-area connected component and join all masks
+        Mat final_mask = Mat::zeros(input.size(), CV_8UC3);
+        for(Mat& mask : masks) {
+            Mat rand_color{input.size(), CV_8UC3, Vec3b{uchar(theRNG()), uchar(theRNG()), uchar(theRNG())}};
+            rand_color.copyTo(final_mask, mask==GC_PR_FGD | mask==GC_FGD);
         }
-        //morphological refinement
-        Mat kernel = getStructuringElement(MORPH_CROSS, Size{5,5});
-        morphologyEx(final_mask, final_mask, MORPH_CLOSE, kernel);
-        morphologyEx(final_mask, final_mask, MORPH_ERODE, kernel);
-
-        Mat output{input.size(), CV_8UC3, Scalar{0,0,0}};
-        Mat green{input.size(), CV_8UC3, Scalar{0,255,0}};
-        green.copyTo(output, final_mask);
-
-        addWeighted(input, 0.5, output, 0.5, 0, output);
-        imshow(window_name, output);
-        waitKey();
+        addWeighted(input, 0.3, final_mask, 0.7, 0, final_mask);
+        imshow(window_name, final_mask);
+        waitKey(0);
     }
 }
