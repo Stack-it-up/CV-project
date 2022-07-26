@@ -102,15 +102,18 @@ void compute_snake(vector<Point> & contour, Mat const& ext_force_x, Mat const& e
 }
 
 void MOG(Mat const& input, Mat& output_x, Mat& output_y) {
+    Mat blurred;
+    blur(input, blurred, Size{7,7});
+
     Mat dx = Mat{input.size(), CV_64F};
     Mat dy = dx.clone();
     Mat abs_dx, abs_dy;
 
-    Sobel(input, dx, CV_64F, 1, 0, 5);
-    Sobel(input, dy, CV_64F, 0, 1, 5);
+    Sobel(blurred, dx, CV_64F, 1, 0, 3);
+    Sobel(blurred, dy, CV_64F, 0, 1, 3);
     Mat mag{dx.size(), CV_64F};
 
-    //use the squared norm of the gradient vector
+    //use the squared norm of the gradient vector as energy
     mag = dx.mul(dx) + dy.mul(dy);
 
     Sobel(mag, dx, CV_64F, 1, 0);
@@ -118,7 +121,7 @@ void MOG(Mat const& input, Mat& output_x, Mat& output_y) {
 
     //normalize
     Mat F_mag;
-    F_mag = abs(dx) + abs(dy); //L1 norm
+    magnitude(dx, dy, F_mag);
     F_mag += 1e-05;
     dx /= F_mag;
     dy /= F_mag;
@@ -133,21 +136,20 @@ void VFC(Mat const& input, Mat& output_x, Mat& output_y, int k, double gamma) {
     CV_Assert(gamma>0);
     constexpr double EPSILON = 1e-05;
 
-    Mat magnitude{};
+    Mat mag{input.size(), CV_64FC1};
     CV_Assert(input.type() == CV_8UC1);
 
-    /*
+
     Mat dx = Mat{input.size(), CV_64F};
     Mat dy = dx.clone();
     Mat abs_dx, abs_dy;
 
-    spatialGradient(input, dx, dy);
+    Sobel(input, dx, CV_64F, 1, 0);
+    Sobel(input, dy, CV_64F, 0, 1);
 
     //use L1 approximation of gradient magnitude
-    addWeighted(abs(dx), 0.5, abs(dy), 0.5, 0, magnitude);
-    //-----------------------------------------------
-    */
-    Canny(input, magnitude, 50, 100, 3, true);
+    magnitude(dx,dy,mag);
+
     //now that we have the gradient magnitude:
     Mat nx{Size(k,k), CV_64FC1};
     Mat ny = nx.clone();
@@ -181,13 +183,15 @@ void VFC(Mat const& input, Mat& output_x, Mat& output_y, int k, double gamma) {
     ky = m.mul(ny);
 
     //now apply the filtering!! (internally uses the DFT)
-    filter2D(magnitude, output_x, CV_64F, kx);
-    filter2D(magnitude, output_y, CV_64F, ky);
+    filter2D(mag, output_x, CV_64F, kx);
+    filter2D(mag, output_y, CV_64F, ky);
 
     //normalize the force using L1 norm (cfr. Gonzalez 11-49)
-    Mat L1 = abs(output_x)+abs(output_y)+1e-05;
-    output_x = -output_x / L1;
-    output_y = -output_y / L1;
+    Mat L2{output_x.size(), CV_64FC1};
+    magnitude(output_x, output_y, L2);
+    L2 += 1e-05;
+    output_x = -output_x / L2;
+    output_y = -output_y / L2;
 }
 
 vector<Point> contour_from_rect(Rect bbox, int step) {

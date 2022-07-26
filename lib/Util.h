@@ -34,15 +34,17 @@ double pixel_accuracy(cv::Mat& detected, cv::Mat& ground_truth);
 /**
  * Returns a vector of Rect containing all the bounding boxes in the file at txt_path
  * bboxes are specified in the format used in the assignment
- * @param padding : number of padding pixels around the bounding box
+ * @param area_scale : if specified, scales the area of rectangle of the specified factor,
+ *                      while keeping the center and aspect ratio unmodified.
+ *                      Value should be positive (values > 1 are for enlarging, <1 for shrinking).
  */
-std::vector<cv::Rect> extract_bboxes(std::string txt_path, int padding=0);
+std::vector<cv::Rect> extract_bboxes(std::string const& txt_path, double fractional_padding=0);
 
 /**
  * Shows the image at img_path with the overlay of the bounding boxes specified in the txt file at txt_path.
  * Bounding boxes are drawn in red
  */
-void show_bboxes(std::string img_path, std::string txt_path);
+void show_bboxes(std::string const& img_path, std::string const& txt_path);
 
 /**
  * Draws grabcut mask into output
@@ -55,5 +57,11 @@ void drawGrabcutMask(cv::Mat& image, cv::Mat& mask, cv::Mat& output, float trans
  * @param magnitude
  */
 void gradient_mag(cv::Mat& input, cv::Mat& magnitude);
+
+/**
+ * Returns true if and only if the image is monochromatic (components H and S are constant)
+ * @param input BGR, 8 bit image
+ */
+bool is_monochromatic(cv::Mat const& input);
 
 #endif //UTIL_H

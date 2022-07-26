@@ -32,29 +32,48 @@ double pixel_accuracy(Mat& detected, Mat& ground_truth) {
     return count_different / double(detected.rows * detected.cols);
 }
 
-vector<Rect> extract_bboxes(string txt_path, int padding) {
+vector<Rect> extract_bboxes(string const& txt_path, double fractional_padding) {
+    CV_Assert(fractional_padding > 0);
+
     ifstream boxes_txt = ifstream(txt_path);
-    //boxes_txt.open(txt_path);
     if(!boxes_txt.is_open()) {
         cerr << "File not found";
         return vector<Rect>{};
     }
 
+    /*
+     * Let fractional_padding = f_p
+     * new_area = f_p * area
+     * So:
+     *
+     * new_w = sqrt(f_p) * w
+     * new_w = w + 2*pad_x
+     *
+     * SOLVE FOR pad_x:
+     * pad_x = w*(sqrt(f_p)-1)/2
+     *
+     * similarly for h and pad_y.
+     *
+     * Note that when pad > 0 we have f_p > 1 (enlarging)
+     * when pad < 0 we have f_p < 1 (shrinking)
+     */
     vector<Rect> boxes;
     while(!boxes_txt.eof()) {
         int x, y, w, h; //params of the rectangle to be read from file
         boxes_txt >> x >> y >> w >> h;
-        boxes.push_back(Rect{x-padding, y-padding, w+(2*padding), h+(2*padding)});
+        int padding_x = cvRound(0.5 * w * (sqrt(fractional_padding)-1));
+        int padding_y = cvRound(0.5 * h * (sqrt(fractional_padding)-1));
+        boxes.emplace_back(x-padding_x, y-padding_y, w+(2*padding_x), h+(2*padding_y));
     }
     boxes_txt.close();
     return boxes;
 }
 
-void show_bboxes(string img_path, string txt_path) {
+void show_bboxes(string const& img_path, string const& txt_path) {
     Mat input = imread(img_path);
     vector<Rect> boxes = extract_bboxes(txt_path);
 
-    for(Rect r : boxes)
+    for(auto const& r : boxes)
         rectangle(input, r, Scalar{0,0,255});
 
     imshow("", input);
@@ -158,4 +177,18 @@ double avg_IoU_score(vector<Rect> &detected, vector<Rect> &ground_truth, double 
     avg_IoU /= tp + fp + fn;
 
     return avg_IoU;
+}
+
+bool is_monochromatic(cv::Mat const& input) {
+    CV_Assert(input.type() == CV_8UC3);
+    Mat hsv;
+    cvtColor(input, hsv, COLOR_BGR2HSV_FULL);
+
+    Mat channels[3];
+    split(hsv, channels);
+
+    int count0 = countNonZero(channels[0] != channels[0].at<uchar>(0,0));
+    int count1 = countNonZero(channels[1] != channels[1].at<uchar>(0,0));
+
+    return (count0 + count1 == 0);
 }
