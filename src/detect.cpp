@@ -20,17 +20,17 @@ void loadBoundingBoxes(vector<vector<Rect>> &bounding_boxes, string &folder_path
 int main() {
     utils::logging::setLogLevel(utils::logging::LogLevel::LOG_LEVEL_SILENT);
 
-    String cfg = "../res/cfg/yolov3-tiny-custom.cfg";
-    String weights = "../res/cfg/yolov3-tiny-custom-mono.weights"; //Put the weights file under cfg directory
-    //String weights = "D:\\Documenti\\Ingegneria\\ComputerVision\\darknet-master\\backup\\yolov3-tiny-custom_old.weights";
+    String cfg = "../res/cfg/yolov4-tiny-custom.cfg";
+    String weights = "../res/cfg/yolov4-tiny-custom.weights"; //Put the weights file under cfg directory
+    //String weights = R"(D:\Documenti\Ingegneria\ComputerVision\darknet-master\backup\yolov4-tiny-custom_last_0793297.weights)";
     String images_path = "../res/evaluation_data/rgb/*.jpg";
     String bounding_boxes_path = "../res/evaluation_data/det/*.txt";
     String export_path = "../out/det/";
     String image_export_path = "../out/bb_img/";
 
-    constexpr float conf_thresh = 0.2;
-    constexpr float nms_thresh = 0.3;
-    constexpr double IoU_thresh = 0.2;
+    constexpr float conf_thresh = 0.3;
+    constexpr float nms_thresh = 0.5;
+    constexpr double IoU_thresh = 0.1;
 
     dnn::Net net = dnn::readNetFromDarknet(cfg, weights);
     net.setPreferableTarget(dnn::DNN_TARGET_CPU);
@@ -52,7 +52,7 @@ int main() {
 
         cout << "Detecting hands on image " << images_names[i] << endl;
 
-        h_det::detect(net, image, bounding_boxes, confidences, conf_thresh);
+        h_det::detect(net, image, bounding_boxes, confidences, conf_thresh, nms_thresh);
 
         // Print original bounding boxes over image
         Scalar color = Scalar(0,0,255);
