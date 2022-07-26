@@ -29,14 +29,14 @@ double avg_IoU_score(std::vector<cv::Rect> &detected, std::vector<cv::Rect> &gro
  * Returns pixel accuracy assuming the two images are CV_8UC1 and have the same size.
  * Pixel accuracy = # of equal pixels / # of total pixels
  */
-double pixel_accuracy(cv::Mat& detected, cv::Mat& ground_truth);
+double pixel_accuracy(cv::Mat const& detected, cv::Mat const& ground_truth);
 
 /**
- * Returns a vector of Rect containing all the bounding boxes in the file at txt_path
- * bboxes are specified in the format used in the assignment
+ * Returns a vector of Rect containing all the bounding boxes in the file at txt_path.
+ * Bounding boxes must be specified in the format specified in the assigned dataset.
  * @param area_scale : if specified, scales the area of rectangle of the specified factor,
  *                      while keeping the center and aspect ratio unmodified.
- *                      Value should be positive (values > 1 are for enlarging, <1 for shrinking).
+ *                      Value should be >0 (values >1 are for enlarging, <1 for shrinking).
  */
 std::vector<cv::Rect> extract_bboxes(std::string const& txt_path, double fractional_padding=0);
 
@@ -49,7 +49,7 @@ void show_bboxes(std::string const& img_path, std::string const& txt_path);
 /**
  * Draws grabcut mask into output
  */
-void drawGrabcutMask(cv::Mat& image, cv::Mat& mask, cv::Mat& output, float transparency_level);
+void drawGrabcutMask(cv::Mat const& image, cv::Mat const& mask, cv::Mat& output, float transparency_level);
 
 /**
  * Compute gradient magnitude using L1 norm

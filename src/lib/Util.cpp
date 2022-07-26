@@ -17,19 +17,13 @@ double IoU_score(Rect detected, Rect ground_truth) {
     return static_cast<double>(I.area())/static_cast<double>(U.area());
 }
 
-double pixel_accuracy(Mat& detected, Mat& ground_truth) {
+double pixel_accuracy(Mat const& detected, Mat const& ground_truth) {
     CV_Assert(detected.type()==CV_8UC1);
     CV_Assert(ground_truth.type()==CV_8UC1);
     CV_Assert(detected.size() == ground_truth.size());
 
-    double count_different = 0;
-    for(int row=0; row<detected.rows; row++) {
-        for(int col=0; col<detected.cols; col++) {
-            if(detected.at<uchar>(row, col) != ground_truth.at<uchar>(row, col))
-                count_different += 1;
-        }
-    }
-    return count_different / double(detected.rows * detected.cols);
+    double count_different = countNonZero(detected ^ ground_truth);
+    return 1 - (count_different / (detected.rows * detected.cols));
 }
 
 vector<Rect> extract_bboxes(string const& txt_path, double fractional_padding) {
@@ -80,7 +74,7 @@ void show_bboxes(string const& img_path, string const& txt_path) {
     waitKey(0);
 }
 
-void drawGrabcutMask(Mat& image, Mat& mask, Mat& output, float transparency_level) {
+void drawGrabcutMask(Mat const& image, Mat const& mask, Mat& output, float transparency_level) {
     CV_Assert(transparency_level <= 1 && transparency_level >= 0);
     Scalar FG_COLOR{255, 255, 255};
     Scalar PROB_FG_COLOR{0,255,0};
