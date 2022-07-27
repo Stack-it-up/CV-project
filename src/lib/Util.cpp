@@ -26,8 +26,8 @@ double pixel_accuracy(Mat const& detected, Mat const& ground_truth) {
     return 1 - (count_different / (detected.rows * detected.cols));
 }
 
-vector<Rect> extract_bboxes(string const& txt_path, double fractional_padding) {
-    CV_Assert(fractional_padding > 0);
+vector<Rect> extract_bboxes(string const& txt_path, double scale_factor) {
+    CV_Assert(scale_factor > 0);
 
     ifstream boxes_txt = ifstream(txt_path);
     if(!boxes_txt.is_open()) {
@@ -57,8 +57,8 @@ vector<Rect> extract_bboxes(string const& txt_path, double fractional_padding) {
         boxes_txt >> x >> y >> w >> h;
         if(x<0 || y<0 || w<0 || h<0)
             continue; //managing spurious lines at the end of the file
-        int padding_x = cvRound(0.5 * w * (sqrt(fractional_padding)-1));
-        int padding_y = cvRound(0.5 * h * (sqrt(fractional_padding)-1));
+        int padding_x = cvRound(0.5 * w * (sqrt(scale_factor)-1));
+        int padding_y = cvRound(0.5 * h * (sqrt(scale_factor)-1));
         boxes.emplace_back(x-padding_x, y-padding_y, w+(2*padding_x), h+(2*padding_y));
     }
     boxes_txt.close();

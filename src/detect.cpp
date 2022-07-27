@@ -26,7 +26,7 @@ int main() {
     String export_path = "../exp/det/";
     String image_export_path = "../exp/bb_img/";
 
-    constexpr float conf_thresh = 0.3;
+    constexpr float conf_thresh = 0.31;
     constexpr float nms_thresh = 0.4;
     constexpr double IoU_thresh = 0.1;
 

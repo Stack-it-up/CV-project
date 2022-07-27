@@ -38,7 +38,7 @@ double pixel_accuracy(cv::Mat const& detected, cv::Mat const& ground_truth);
  *                      while keeping the center and aspect ratio unmodified.
  *                      Value should be >0 (values >1 are for enlarging, <1 for shrinking).
  */
-std::vector<cv::Rect> extract_bboxes(std::string const& txt_path, double fractional_padding=1.0);
+std::vector<cv::Rect> extract_bboxes(std::string const& txt_path, double scale_factor=1.0);
 
 /**
  * Shows the image at img_path with the overlay of the bounding boxes specified in the txt file at txt_path.
