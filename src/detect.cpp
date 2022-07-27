@@ -14,9 +14,6 @@
 using namespace std;
 using namespace cv;
 
-void loadImages(vector<Mat>& images, string& folder_path, vector<cv::String>& images_names);
-void loadBoundingBoxes(vector<vector<Rect>> &bounding_boxes, string &folder_path);
-
 int main() {
     utils::logging::setLogLevel(utils::logging::LogLevel::LOG_LEVEL_SILENT);
 
@@ -24,7 +21,6 @@ int main() {
     String cfg_v4 = "../res/cfg/yolov4-tiny-custom.cfg";
     String weights_v3 = "../res/cfg/yolov3-tiny-custom.weights";
     String weights_v4 = "../res/cfg/yolov4-tiny-custom.weights";
-    //String weights = R"(D:\Documenti\Ingegneria\ComputerVision\darknet-master\backup\backup_of_backup\yolov3-tiny-custom_last.weights)";
     String images_path = "../res/evaluation_data/rgb/*.jpg";
     String bounding_boxes_path = "../res/evaluation_data/det/*.txt";
     String export_path = "../exp/det/";
@@ -44,7 +40,7 @@ int main() {
 
     vector<dnn::Net> nets {net_v3, net_v4};
     vector<Mat> images;
-    vector<cv::String> images_names;
+    vector<std::string> images_names;
     vector<vector<Rect>> original_bounding_boxes;
 
     loadImages(images, images_path, images_names);
@@ -84,23 +80,5 @@ int main() {
     cout << "Average IoU over all test images: " << IoU << endl;
 }
 
-void loadImages(vector<Mat>& images, string& folder_path, vector<cv::String>& images_names) {
-    vector<cv::String> img_names;
-    glob(folder_path, img_names, false);
 
-    for (String& img_name : img_names) {
-        images.push_back(imread(img_name));
 
-        cv::String image_name = img_name.substr(folder_path.size() - 5, img_name.size() - folder_path.size() + 5);
-        images_names.push_back(image_name);
-    }
-}
-
-void loadBoundingBoxes(vector<vector<Rect>> &bounding_boxes, string &folder_path) {
-    vector<cv::String> file_names;
-    glob(folder_path, file_names, false);
-
-    for (String& file_name : file_names) {
-        bounding_boxes.push_back(extract_bboxes(file_name, 1.0));
-    }
-}

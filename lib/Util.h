@@ -64,4 +64,8 @@ void gradient_mag(cv::Mat& input, cv::Mat& magnitude);
  */
 bool is_monochromatic(cv::Mat const& input);
 
+void loadImages(std::vector<cv::Mat>& images, std::string const& folder_path, std::vector<std::string>& images_names);
+
+void loadBoundingBoxes(std::vector<std::vector<cv::Rect>> &bounding_boxes, std::string &folder_path);
+
 #endif //UTIL_H

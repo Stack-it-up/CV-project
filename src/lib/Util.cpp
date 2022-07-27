@@ -53,8 +53,10 @@ vector<Rect> extract_bboxes(string const& txt_path, double fractional_padding) {
      */
     vector<Rect> boxes;
     while(!boxes_txt.eof()) {
-        int x, y, w, h; //params of the rectangle to be read from file
+        int x=-1, y=-1, w=-1, h=-1; //params of the rectangle to be read from file
         boxes_txt >> x >> y >> w >> h;
+        if(x<0 || y<0 || w<0 || h<0)
+            continue; //managing spurious lines at the end of the file
         int padding_x = cvRound(0.5 * w * (sqrt(fractional_padding)-1));
         int padding_y = cvRound(0.5 * h * (sqrt(fractional_padding)-1));
         boxes.emplace_back(x-padding_x, y-padding_y, w+(2*padding_x), h+(2*padding_y));
@@ -187,4 +189,25 @@ bool is_monochromatic(cv::Mat const& input) {
     int count1 = countNonZero(channels[1] != channels[1].at<uchar>(0,0));
 
     return (count0 + count1 == 0);
+}
+
+void loadImages(vector<Mat>& images, string const& folder_path, vector<std::string>& images_names) {
+    vector<std::string> img_names;
+    glob(folder_path, img_names, false);
+
+    for (std::string& img_name : img_names) {
+        images.push_back(imread(img_name));
+
+        std::string image_name = img_name.substr(folder_path.size() - 5, img_name.size() - folder_path.size() + 5);
+        images_names.push_back(image_name);
+    }
+}
+
+void loadBoundingBoxes(vector<vector<Rect>> &bounding_boxes, string &folder_path) {
+    vector<std::string> file_names;
+    glob(folder_path, file_names, false);
+
+    for (String& file_name : file_names) {
+        bounding_boxes.push_back(extract_bboxes(file_name));
+    }
 }

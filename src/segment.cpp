@@ -19,7 +19,7 @@ using namespace std;
 
 int main() {
     const string PHOTOS_DIR = "../res/evaluation_data/rgb/*.jpg";
-    const string BBOXES_DIR = "../res/evaluation_data/det/*.txt";
+    const string BBOXES_DIR = "../exp/det/*.txt";
     const string MASKS_DIR = "../res/evaluation_data/mask/*.png";
 
     vector<string> photos_paths;
@@ -35,8 +35,8 @@ int main() {
     sort(masks_paths.begin(), masks_paths.end());
 
     //scale factors for bounding boxes
-    constexpr double scale_XXL = 1.0;
-    constexpr double scale_XXS = 0.7;
+    constexpr double scale_XXL = 1.2;
+    constexpr double scale_XXS = 0.85;
     double accuracy_accumulator = 0;
 
     for(int i=0; i<photos_paths.size(); i++) {
@@ -50,7 +50,7 @@ int main() {
 
         //// Initial segmentation with meanshift //////
         Mat rgb{};
-        cvtColor(input, rgb, COLOR_BGR2HSV_FULL);
+        //cvtColor(input, rgb, COLOR_BGR2HSV_FULL);
         pyrMeanShiftFiltering(input, rgb, 20, 12, 1);
         imshow(window_name, rgb);
         //waitKey(1000);
@@ -75,12 +75,11 @@ int main() {
 
             //DEBUG
             Mat tmp;
-            /*
+
             drawGrabcutMask(input, masks[j], tmp, 0.5);
             imshow(window_name, tmp);
             waitKey(1000);
             //TODO remove debug statement
-             */
 
             //compute the snake from a smaller rectangle
             contour = contour_from_rect(boxes_XXS[j]);
@@ -90,7 +89,7 @@ int main() {
             //DEBUG
             drawGrabcutMask(input, masks[j], tmp, 0.5);
             imshow(window_name, tmp);
-            //waitKey(1000);
+            waitKey(1000);
             //TODO remove debug statement
         }
 
@@ -147,7 +146,7 @@ int main() {
         //display the final segmentation
         addWeighted(input, 0.3, final_mask, 0.7, 0, final_mask);
         imshow(window_name, final_mask);
-        waitKey(1000);
+        waitKey(500);
     }
     //print the average accuracy on the whole dev set
     accuracy_accumulator /= photos_paths.size();
