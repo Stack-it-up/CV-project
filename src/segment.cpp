@@ -36,10 +36,10 @@ int main() {
 
     //scale factors for bounding boxes
     constexpr double scale_XXL = 1.2;
-    constexpr double scale_XXS = 0.85;
+    constexpr double scale_XXS = 0.7;
     double accuracy_accumulator = 0;
 
-    for(int i=0; i<photos_paths.size(); i++) {
+    for(int i=12; i<photos_paths.size(); i++) {
         const string window_name = "win";
         namedWindow(window_name, WINDOW_NORMAL);
 
