@@ -203,7 +203,7 @@ void loadImages(vector<Mat>& images, string const& folder_path, vector<std::stri
     }
 }
 
-void loadBoundingBoxes(vector<vector<Rect>> &bounding_boxes, string &folder_path) {
+void loadBoundingBoxes(vector<vector<Rect>> &bounding_boxes, string const& folder_path) {
     vector<std::string> file_names;
     glob(folder_path, file_names, false);
 

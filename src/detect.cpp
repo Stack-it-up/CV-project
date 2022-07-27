@@ -17,14 +17,14 @@ using namespace cv;
 int main() {
     utils::logging::setLogLevel(utils::logging::LogLevel::LOG_LEVEL_SILENT);
 
-    String cfg_v3 = "../res/cfg/yolov3-tiny-custom.cfg";
-    String cfg_v4 = "../res/cfg/yolov4-tiny-custom.cfg";
-    String weights_v3 = "../res/cfg/yolov3-tiny-custom.weights";
-    String weights_v4 = "../res/cfg/yolov4-tiny-custom.weights";
-    String images_path = "../res/evaluation_data/rgb/*.jpg";
-    String bounding_boxes_path = "../res/evaluation_data/det/*.txt";
-    String export_path = "../exp/det/";
-    String image_export_path = "../exp/bb_img/";
+    const string cfg_v3 = "../res/cfg/yolov3-tiny-custom.cfg";
+    const string cfg_v4 = "../res/cfg/yolov4-tiny-custom.cfg";
+    const string weights_v3 = "../res/cfg/yolov3-tiny-custom.weights";
+    const string weights_v4 = "../res/cfg/yolov4-tiny-custom.weights";
+    const string images_path = "../res/evaluation_data/rgb/*.jpg";
+    const string bounding_boxes_path = "../res/evaluation_data/det/*.txt";
+    const string export_path = "../exp/det/";
+    const string image_export_path = "../exp/bb_img/";
 
     constexpr float conf_thresh = 0.3;
     constexpr float nms_thresh = 0.4;
@@ -55,7 +55,7 @@ int main() {
 
         cout << "Detecting hands on image " << images_names[i] << endl;
 
-        h_det::detect(nets, image, bounding_boxes, confidences, conf_thresh, nms_thresh);
+        hand_detect::detect(nets, image, bounding_boxes, confidences, conf_thresh, nms_thresh);
 
         // Print original bounding boxes over image
         Scalar color = Scalar(0,0,255);
@@ -68,9 +68,9 @@ int main() {
         double img_IoU = avg_IoU_score(bounding_boxes, original_bounding_boxes[i], IoU_thresh);
         cout << "- Average IoU: " << img_IoU << endl;
 
-        //h_det::show(image, bounding_boxes);
-        h_det::export_bb(bounding_boxes, export_path + images_names[i] + ".txt");
-        h_det::export_image_bb(image, bounding_boxes, image_export_path + images_names[i]);
+        //hand_detect::show(image, bounding_boxes);
+        hand_detect::export_bb(bounding_boxes, export_path + images_names[i] + ".txt");
+        hand_detect::export_image_bb(image, bounding_boxes, image_export_path + images_names[i]);
 
         IoU += img_IoU;
         cout << "\n";

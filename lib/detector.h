@@ -9,7 +9,7 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/dnn.hpp>
 
-namespace h_det {
+namespace hand_detect {
 
     void detect(std::vector<cv::dnn::Net> &nets, cv::Mat &img, std::vector<cv::Rect> &bounding_boxes, std::vector<float> &confidences,
                 float CONF_THRESH = 0.5, float NMS_THRESH = 0.5);
