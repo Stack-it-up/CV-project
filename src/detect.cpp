@@ -17,24 +17,24 @@ using namespace cv;
 int main() {
     utils::logging::setLogLevel(utils::logging::LogLevel::LOG_LEVEL_SILENT);
 
-    const string cfg_v3 = "../res/cfg/yolov3-tiny-custom.cfg";
-    const string cfg_v4 = "../res/cfg/yolov4-tiny-custom.cfg";
-    const string weights_v3 = "../res/cfg/yolov3-tiny-custom.weights";
-    const string weights_v4 = "../res/cfg/yolov4-tiny-custom.weights";
-    const string images_path = "../res/evaluation_data/rgb/*.jpg";
-    const string bounding_boxes_path = "../res/evaluation_data/det/*.txt";
-    const string export_path = "../exp/det/";
-    const string image_export_path = "../exp/bb_img/";
+    const string CFG_V3_PATH = "../res/cfg/yolov3-tiny-custom.cfg";
+    const string CFG_V4_PATH = "../res/cfg/yolov4-tiny-custom.cfg";
+    const string WEIGHTS_V3_PATH = "../res/cfg/yolov3-tiny-custom.weights";
+    const string WEIGHTS_V4_PATH = "../res/cfg/yolov4-tiny-custom.weights";
+    const string IMAGES_PATH = "../res/evaluation_data/rgb/*.jpg";
+    const string BOUNDING_BOXES_PATH = "../res/evaluation_data/det/*.txt";
+    const string EXPORT_TXT_PATH = "../exp/det/";
+    const string EXPORT_IMG_PATH = "../exp/bb_img/";
 
-    constexpr float conf_thresh = 0.3;
-    constexpr float nms_thresh = 0.4;
-    constexpr double IoU_thresh = 0.1;
+    constexpr float CONF_THRESH = 0.3;
+    constexpr float NMS_THRESH = 0.4;
+    constexpr double IOU_THRESH = 0.1;
 
-    dnn::Net net_v3 = dnn::readNetFromDarknet(cfg_v3, weights_v3);
+    dnn::Net net_v3 = dnn::readNetFromDarknet(CFG_V3_PATH, WEIGHTS_V3_PATH);
     net_v3.setPreferableTarget(dnn::DNN_TARGET_CPU);
     net_v3.setPreferableBackend(dnn::DNN_BACKEND_OPENCV);
 
-    dnn::Net net_v4 = dnn::readNetFromDarknet(cfg_v4, weights_v4);
+    dnn::Net net_v4 = dnn::readNetFromDarknet(CFG_V4_PATH, WEIGHTS_V4_PATH);
     net_v4.setPreferableTarget(dnn::DNN_TARGET_CPU);
     net_v4.setPreferableBackend(dnn::DNN_BACKEND_OPENCV);
 
@@ -43,8 +43,8 @@ int main() {
     vector<std::string> images_names;
     vector<vector<Rect>> original_bounding_boxes;
 
-    loadImages(images, images_path, images_names);
-    loadBoundingBoxes(original_bounding_boxes, bounding_boxes_path);
+    loadImages(images, IMAGES_PATH, images_names);
+    loadBoundingBoxes(original_bounding_boxes, BOUNDING_BOXES_PATH);
 
     double IoU = 0;
 
@@ -55,7 +55,7 @@ int main() {
 
         cout << "Detecting hands on image " << images_names[i] << endl;
 
-        hand_detect::detect(nets, image, bounding_boxes, confidences, conf_thresh, nms_thresh);
+        hand_detect::detect(nets, image, bounding_boxes, confidences, CONF_THRESH, NMS_THRESH);
 
         // Print original bounding boxes over image
         Scalar color = Scalar(0,0,255);
@@ -65,12 +65,12 @@ int main() {
             rectangle(image, rect, color, 2);
         }
 
-        double img_IoU = avg_IoU_score(bounding_boxes, original_bounding_boxes[i], IoU_thresh);
+        double img_IoU = avg_IoU_score(bounding_boxes, original_bounding_boxes[i], IOU_THRESH);
         cout << "- Average IoU: " << img_IoU << endl;
 
         //hand_detect::show(image, bounding_boxes);
-        hand_detect::export_bb(bounding_boxes, export_path + images_names[i] + ".txt");
-        hand_detect::export_image_bb(image, bounding_boxes, image_export_path + images_names[i]);
+        hand_detect::export_bb(bounding_boxes, EXPORT_TXT_PATH + images_names[i] + ".txt");
+        hand_detect::export_image_bb(image, bounding_boxes, EXPORT_IMG_PATH + images_names[i]);
 
         IoU += img_IoU;
         cout << "\n";
