@@ -22,13 +22,13 @@ int main() {
 
     String cfg_v3 = "../res/cfg/yolov3-tiny-custom.cfg";
     String cfg_v4 = "../res/cfg/yolov4-tiny-custom.cfg";
-    String weights_v3 = "../res/cfg/yolov3-tiny-custom-mono.weights";
+    String weights_v3 = "../res/cfg/yolov3-tiny-custom.weights";
     String weights_v4 = "../res/cfg/yolov4-tiny-custom.weights";
     //String weights = R"(D:\Documenti\Ingegneria\ComputerVision\darknet-master\backup\backup_of_backup\yolov3-tiny-custom_last.weights)";
     String images_path = "../res/evaluation_data/rgb/*.jpg";
     String bounding_boxes_path = "../res/evaluation_data/det/*.txt";
-    String export_path = "../out/det/";
-    String image_export_path = "../out/bb_img/";
+    String export_path = "../exp/det/";
+    String image_export_path = "../exp/bb_img/";
 
     constexpr float conf_thresh = 0.3;
     constexpr float nms_thresh = 0.4;
