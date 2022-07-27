@@ -11,17 +11,17 @@
 
 namespace h_det {
 
-    void detect(cv::dnn::Net &net, cv::Mat &img, std::vector<cv::Rect> &bounding_boxes, std::vector<float> &confidences,
+    void detect(std::vector<cv::dnn::Net> &nets, cv::Mat &img, std::vector<cv::Rect> &bounding_boxes, std::vector<float> &confidences,
                 float CONF_THRESH = 0.5, float NMS_THRESH = 0.5);
 
     void show(cv::Mat &img, std::vector<cv::Rect> &bounding_boxes);
 
-    void detect_and_show(cv::dnn::Net &net, cv::Mat &img, std::vector<cv::Rect> &bounding_boxes, std::vector<float> &confidences,
+    void detect_and_show(std::vector<cv::dnn::Net> &nets, cv::Mat &img, std::vector<cv::Rect> &bounding_boxes, std::vector<float> &confidences,
                          float CONF_THRESH = 0.5, float NMS_THRESH = 0.5);
 
-    void export_bb(std::vector<cv::Rect>& bounding_boxes, std::vector<float>& confidences, const std::string& export_path, float CONF_THRESH = 0.5, float NMS_THRESH = 0.5);
+    void export_bb(std::vector<cv::Rect>& bounding_boxes, const std::string& export_path);
 
-    void export_image_bb(cv::Mat& img, std::vector<cv::Rect>& bounding_boxes, std::vector<float>& confidences, const std::string& export_path, float CONF_THRESH = 0.5, float NMS_THRESH = 0.5);
+    void export_image_bb(cv::Mat& img, std::vector<cv::Rect>& bounding_boxes, const std::string& export_path);
 }
 
 #endif //YOLO_DETECTOR_H

@@ -20,22 +20,29 @@ void loadBoundingBoxes(vector<vector<Rect>> &bounding_boxes, string &folder_path
 int main() {
     utils::logging::setLogLevel(utils::logging::LogLevel::LOG_LEVEL_SILENT);
 
-    String cfg = "../res/cfg/yolov4-tiny-custom.cfg";
-    String weights = "../res/cfg/yolov4-tiny-custom.weights"; //Put the weights file under cfg directory
-    //String weights = R"(D:\Documenti\Ingegneria\ComputerVision\darknet-master\backup\yolov4-tiny-custom_last_0793297.weights)";
+    String cfg_v3 = "../res/cfg/yolov3-tiny-custom.cfg";
+    String cfg_v4 = "../res/cfg/yolov4-tiny-custom.cfg";
+    String weights_v3 = "../res/cfg/yolov3-tiny-custom-mono.weights";
+    String weights_v4 = "../res/cfg/yolov4-tiny-custom.weights";
+    //String weights = R"(D:\Documenti\Ingegneria\ComputerVision\darknet-master\backup\backup_of_backup\yolov3-tiny-custom_last.weights)";
     String images_path = "../res/evaluation_data/rgb/*.jpg";
     String bounding_boxes_path = "../res/evaluation_data/det/*.txt";
     String export_path = "../out/det/";
     String image_export_path = "../out/bb_img/";
 
     constexpr float conf_thresh = 0.3;
-    constexpr float nms_thresh = 0.5;
+    constexpr float nms_thresh = 0.4;
     constexpr double IoU_thresh = 0.1;
 
-    dnn::Net net = dnn::readNetFromDarknet(cfg, weights);
-    net.setPreferableTarget(dnn::DNN_TARGET_CPU);
-    net.setPreferableBackend(dnn::DNN_BACKEND_OPENCV);
+    dnn::Net net_v3 = dnn::readNetFromDarknet(cfg_v3, weights_v3);
+    net_v3.setPreferableTarget(dnn::DNN_TARGET_CPU);
+    net_v3.setPreferableBackend(dnn::DNN_BACKEND_OPENCV);
 
+    dnn::Net net_v4 = dnn::readNetFromDarknet(cfg_v4, weights_v4);
+    net_v4.setPreferableTarget(dnn::DNN_TARGET_CPU);
+    net_v4.setPreferableBackend(dnn::DNN_BACKEND_OPENCV);
+
+    vector<dnn::Net> nets {net_v3, net_v4};
     vector<Mat> images;
     vector<cv::String> images_names;
     vector<vector<Rect>> original_bounding_boxes;
@@ -52,7 +59,7 @@ int main() {
 
         cout << "Detecting hands on image " << images_names[i] << endl;
 
-        h_det::detect(net, image, bounding_boxes, confidences, conf_thresh, nms_thresh);
+        h_det::detect(nets, image, bounding_boxes, confidences, conf_thresh, nms_thresh);
 
         // Print original bounding boxes over image
         Scalar color = Scalar(0,0,255);
@@ -66,8 +73,8 @@ int main() {
         cout << "- Average IoU: " << img_IoU << endl;
 
         //h_det::show(image, bounding_boxes);
-        //h_det::export_bb(bounding_boxes, confidences, export_path + images_names[i] + ".txt", conf_thresh);
-        h_det::export_image_bb(image, bounding_boxes, confidences, image_export_path + images_names[i], conf_thresh, nms_thresh);
+        h_det::export_bb(bounding_boxes, export_path + images_names[i] + ".txt");
+        h_det::export_image_bb(image, bounding_boxes, image_export_path + images_names[i]);
 
         IoU += img_IoU;
         cout << "\n";
@@ -94,6 +101,6 @@ void loadBoundingBoxes(vector<vector<Rect>> &bounding_boxes, string &folder_path
     glob(folder_path, file_names, false);
 
     for (String& file_name : file_names) {
-        bounding_boxes.push_back(extract_bboxes(file_name));
+        bounding_boxes.push_back(extract_bboxes(file_name, 1.0));
     }
 }
