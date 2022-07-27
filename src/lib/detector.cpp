@@ -9,7 +9,7 @@
 using namespace std;
 using namespace cv;
 
-void h_det::detect(std::vector<cv::dnn::Net>& nets, cv::Mat& img, std::vector<cv::Rect>& bounding_boxes, std::vector<float>& confidences, float CONF_THRESH, float NMS_THRESH) {
+void hand_detect::detect(std::vector<cv::dnn::Net>& nets, cv::Mat& img, std::vector<cv::Rect>& bounding_boxes, std::vector<float>& confidences, float CONF_THRESH, float NMS_THRESH) {
     if (nets.empty()) {
         return;
     }
@@ -85,7 +85,7 @@ void h_det::detect(std::vector<cv::dnn::Net>& nets, cv::Mat& img, std::vector<cv
     }
 }
 
-void h_det::show(cv::Mat &img, std::vector<cv::Rect> &bounding_boxes) {
+void hand_detect::show(cv::Mat &img, std::vector<cv::Rect> &bounding_boxes) {
     for(int i = 0; i < size(bounding_boxes); i++) {
         Rect bounding_box = bounding_boxes[i];
         Scalar color = Scalar(0,255,0);
@@ -96,14 +96,14 @@ void h_det::show(cv::Mat &img, std::vector<cv::Rect> &bounding_boxes) {
     waitKey(0);
 }
 
-void h_det::detect_and_show(std::vector<cv::dnn::Net> &nets, cv::Mat &img, std::vector<cv::Rect> &bounding_boxes, std::vector<float> &confidences, float CONF_THRESH, float NMS_THRESH) {
-    h_det::detect(nets, img, bounding_boxes, confidences, CONF_THRESH);
-    h_det::show(img, bounding_boxes);
+void hand_detect::detect_and_show(std::vector<cv::dnn::Net> &nets, cv::Mat &img, std::vector<cv::Rect> &bounding_boxes, std::vector<float> &confidences, float CONF_THRESH, float NMS_THRESH) {
+    hand_detect::detect(nets, img, bounding_boxes, confidences, CONF_THRESH);
+    hand_detect::show(img, bounding_boxes);
 }
 
-void h_det::export_bb(std::vector<cv::Rect>& bounding_boxes, const std::string& export_path) {
+void hand_detect::export_bb(std::vector<cv::Rect>& bounding_boxes, const std::string& export_path) {
     ofstream output;
-    output.open (export_path);
+    output.open(export_path);
 
     for(int i = 0; i < size(bounding_boxes); i++) {
         Rect bounding_box = bounding_boxes.at(i);
@@ -113,7 +113,7 @@ void h_det::export_bb(std::vector<cv::Rect>& bounding_boxes, const std::string& 
     output.close();
 }
 
-void h_det::export_image_bb(cv::Mat& img, std::vector<cv::Rect>& bounding_boxes, const std::string& export_path) {
+void hand_detect::export_image_bb(cv::Mat& img, std::vector<cv::Rect>& bounding_boxes, const std::string& export_path) {
     for(int i = 0; i < size(bounding_boxes); i++) {
         Rect bounding_box = bounding_boxes.at(i);
         Scalar color = Scalar(0,255,0);
