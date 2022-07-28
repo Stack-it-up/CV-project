@@ -137,7 +137,7 @@ void hand_detect::segment(Mat const& input, Mat& output, string const& bboxes_pa
     //show the final segmentation output
     addWeighted(input, 0.3, final_mask, 0.7, 0, final_mask);
     imshow(winname, final_mask);
-    waitKey(1000);
+    waitKey();
 }
 
 void hand_detect::segmentation_demo() {
