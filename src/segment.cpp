@@ -21,8 +21,8 @@ void hand_detect::segment(Mat const& input, Mat& output, string const& bboxes_pa
     namedWindow(winname, WINDOW_NORMAL);
 
     //scale factors for bounding boxes
-    constexpr double scale_XXL = 5;
-    constexpr double scale_M = 1.1;
+    constexpr double scale_XXL = 10;
+    constexpr double scale_M = 1.0;
     constexpr double scale_XXS = 0.7;
 
     ////// Extract and save bounding boxes ////////
@@ -98,14 +98,14 @@ void hand_detect::segment(Mat const& input, Mat& output, string const& bboxes_pa
         for (int j = 0; j < boxes_M.size(); j++) {
             //if there are too few foreground pixels, initialize grabcut with the rectangle instead
             Rect r = boxes_M[j];
+            //adjust the rectangle r for ROI detection
+            r.x -= boxes_XXL[j].x;
+            r.y -= boxes_XXL[j].y;
             int grabcut_mode = GC_INIT_WITH_MASK;
             int n_pixels = boxes_M[j].area();
             int n_fgd = countNonZero(masks[j] == GC_PR_FGD | masks[j] == GC_FGD);
             if (n_fgd < 0.1 * n_pixels) {
                 grabcut_mode = GC_INIT_WITH_RECT;
-                //adjust the rectangle r
-                r.x -= boxes_XXL[j].x;
-                r.y -= boxes_XXL[j].y;
                 cerr << "[WARN] Less than 10% of the pixels in the bbox were identified as foreground: " <<
                      "proceeding with rectangle initialization...\n";
 
@@ -118,7 +118,7 @@ void hand_detect::segment(Mat const& input, Mat& output, string const& bboxes_pa
                     r,
                     bgm,
                     fgm,
-                    7,
+                    10,
                     grabcut_mode
             );
         }
@@ -138,7 +138,7 @@ void hand_detect::segment(Mat const& input, Mat& output, string const& bboxes_pa
     //show the final segmentation output
     addWeighted(input, 0.3, final_mask, 0.7, 0, final_mask);
     imshow(winname, final_mask);
-    waitKey();
+    waitKey(0);
 }
 
 void hand_detect::segmentation_demo() {
