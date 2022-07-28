@@ -5,11 +5,13 @@
 #include "detector.h"
 #include <iostream>
 #include <fstream>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
 
 using namespace std;
 using namespace cv;
 
-void hand_detect::detect(std::vector<cv::dnn::Net>& nets, cv::Mat& img, std::vector<cv::Rect>& bounding_boxes, std::vector<float>& confidences, float CONF_THRESH, float NMS_THRESH) {
+void hand_detect::detector::detect(std::vector<cv::dnn::Net> const& nets, cv::Mat const& img, std::vector<cv::Rect>& bounding_boxes, std::vector<float>& confidences, float CONF_THRESH, float NMS_THRESH) {
     if (nets.empty()) {
         return;
     }
@@ -85,7 +87,7 @@ void hand_detect::detect(std::vector<cv::dnn::Net>& nets, cv::Mat& img, std::vec
     }
 }
 
-void hand_detect::show(cv::Mat &img, std::vector<cv::Rect> &bounding_boxes) {
+void hand_detect::detector::show(cv::Mat const& img, std::vector<cv::Rect> const& bounding_boxes) {
     for(int i = 0; i < size(bounding_boxes); i++) {
         Rect bounding_box = bounding_boxes[i];
         Scalar color = Scalar(0,255,0);
@@ -96,12 +98,7 @@ void hand_detect::show(cv::Mat &img, std::vector<cv::Rect> &bounding_boxes) {
     waitKey(0);
 }
 
-void hand_detect::detect_and_show(std::vector<cv::dnn::Net> &nets, cv::Mat &img, std::vector<cv::Rect> &bounding_boxes, std::vector<float> &confidences, float CONF_THRESH, float NMS_THRESH) {
-    hand_detect::detect(nets, img, bounding_boxes, confidences, CONF_THRESH);
-    hand_detect::show(img, bounding_boxes);
-}
-
-void hand_detect::export_bb(std::vector<cv::Rect>& bounding_boxes, const std::string& export_path) {
+void hand_detect::detector::export_bb(std::vector<cv::Rect> const& bounding_boxes, const std::string& export_path) {
     ofstream output;
     output.open(export_path);
 
@@ -113,13 +110,13 @@ void hand_detect::export_bb(std::vector<cv::Rect>& bounding_boxes, const std::st
     output.close();
 }
 
-void hand_detect::export_image_bb(cv::Mat& img, std::vector<cv::Rect>& bounding_boxes, const std::string& export_path) {
+void hand_detect::detector::export_image_bb(cv::Mat const& img, std::vector<cv::Rect> const& bounding_boxes, const std::string& export_path) {
     for(int i = 0; i < size(bounding_boxes); i++) {
         Rect bounding_box = bounding_boxes.at(i);
         Scalar color = Scalar(0,255,0);
         rectangle(img, bounding_box, color, 2);
     }
 
-    cout << "-Saving image in " << export_path << endl;
+    cout << "- Exporting image in " << export_path << "\n";
     imwrite(export_path, img);
 }

@@ -160,6 +160,8 @@ double avg_IoU_score(vector<Rect> &detected, vector<Rect> &ground_truth, double 
             IoU_scores[gt_index].det_index = det_index;
             IoU_scores[gt_index].IoU = all_IoU_scores[gt_index][det_index];
 
+            cout << "-- IoU score for hand " << gt_index << ": " << IoU_scores[gt_index].IoU << "\n";
+
             avg_IoU += IoU_scores[gt_index].IoU;
 
             fp--;
