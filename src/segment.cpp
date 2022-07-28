@@ -21,13 +21,21 @@ void hand_detect::segment(Mat const& input, Mat& output, string const& bboxes_pa
     namedWindow(winname, WINDOW_NORMAL);
 
     //scale factors for bounding boxes
-    constexpr double scale_XXL = 1.0;
+    constexpr double scale_XXL = 4;
     constexpr double scale_XXS = 0.7;
 
     ////// Extract and save bounding boxes ////////
+    vector<Rect> boxes_M = extract_bboxes(bboxes_path);
     vector<Rect> boxes_XXL = extract_bboxes(bboxes_path, scale_XXL);
     vector<Rect> boxes_XXS = extract_bboxes(bboxes_path, scale_XXS);
 
+    //we need to crop the bounding boxes
+    for(Rect& box : boxes_M)
+        crop_bboxes(input, box);
+    for(Rect& box : boxes_XXL)
+        crop_bboxes(input, box);
+    for(Rect& box : boxes_XXS)
+        crop_bboxes(input, box);
     //// Initial segmentation with meanshift //////
     Mat rgb{};
     pyrMeanShiftFiltering(input, rgb, 20, 12, 1);
@@ -39,7 +47,7 @@ void hand_detect::segment(Mat const& input, Mat& output, string const& bboxes_pa
     }
 
     //////////////// Mask intialization with snakes //////////////////
-    vector<Mat> masks(boxes_XXL.size()); //will contain one mask for each bounding box
+    vector<Mat> masks(boxes_M.size()); //will contain one mask for each bounding box
     Mat input_gray;
     cvtColor(input, input_gray, COLOR_BGR2GRAY);
 
@@ -52,10 +60,10 @@ void hand_detect::segment(Mat const& input, Mat& output, string const& bboxes_pa
     VFC(input_gray, vfc_x, vfc_y, ker_size, 2.4);
 
     //compute the snake for each bounding box and initialize the mask with foreground and background markers
-    for(int j=0; j<boxes_XXL.size(); j++) {
+    for(int j=0; j<boxes_M.size(); j++) {
         masks[j] = Mat{input.size(), CV_8UC1, GC_BGD}; //initialize the mask as "definitely background"
-        vector<Point> contour = contour_from_rect(boxes_XXL[j]); //obtain an initial contour
-        fillConvexPoly(masks[j], contour, GC_PR_BGD); //initialize the inside of the full rectangle as "probably background"
+        vector<Point> contour = contour_from_rect(boxes_M[j]); //obtain contour of the big rectangle to fill it
+        fillConvexPoly(masks[j], contour, GC_PR_BGD); //fill it as "probably background"
 
         if(show_steps) {
             Mat tmp;
@@ -86,21 +94,26 @@ void hand_detect::segment(Mat const& input, Mat& output, string const& bboxes_pa
     }
 
     if(apply_grabcut) {
-        for (int j = 0; j < boxes_XXL.size(); j++) {
+        for (int j = 0; j < boxes_M.size(); j++) {
             //if there are too few foreground pixels, initialize grabcut with the rectangle instead
+            Rect r = boxes_M[j];
             int grabcut_mode = GC_INIT_WITH_MASK;
-            int n_pixels = boxes_XXL[j].area();
+            int n_pixels = boxes_M[j].area();
             int n_fgd = countNonZero(masks[j] == GC_PR_FGD | masks[j] == GC_FGD);
             if (n_fgd < 0.1 * n_pixels) {
                 grabcut_mode = GC_INIT_WITH_RECT;
+                //adjust the rectangle r
+                r.x -= boxes_XXL[j].x;
+                r.y -= boxes_XXL[j].y;
                 cerr << "[WARN] Less than 10% of the pixels in the bbox were identified as foreground: " <<
                      "proceeding with rectangle initialization...\n";
+
             }
             //finally, apply grabcut to each mask
             Mat bgm, fgm;
-            Rect r = boxes_XXL[j];
-            grabCut(rgb,
-                    masks[j],
+
+            grabCut(rgb(boxes_XXL[j]),
+                    masks[j](boxes_XXL[j]),
                     r,
                     bgm,
                     fgm,
@@ -146,7 +159,7 @@ void hand_detect::segmentation_demo() {
 
     double accuracy_accumulator = 0;
 
-    for(int i=0; i<photos_paths.size(); i++) {
+    for(int i=15; i<photos_paths.size(); i++) {
         const Mat input = imread(photos_paths[i], IMREAD_COLOR);
         const Mat ground_truth_mask = imread(masks_paths[i], IMREAD_GRAYSCALE);
         Mat output;

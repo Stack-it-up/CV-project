@@ -9,15 +9,16 @@
 
 using namespace cv;
 using namespace std;
+using namespace hand_detect;
 
 
-double IoU_score(Rect detected, Rect ground_truth) {
+double hand_detect::IoU_score(Rect detected, Rect ground_truth) {
     Rect I = detected & ground_truth;
     Rect U = detected | ground_truth;
     return static_cast<double>(I.area())/static_cast<double>(U.area());
 }
 
-double pixel_accuracy(Mat const& detected, Mat const& ground_truth) {
+double hand_detect::pixel_accuracy(Mat const& detected, Mat const& ground_truth) {
     CV_Assert(detected.type()==CV_8UC1);
     CV_Assert(ground_truth.type()==CV_8UC1);
     CV_Assert(detected.size() == ground_truth.size());
@@ -26,7 +27,7 @@ double pixel_accuracy(Mat const& detected, Mat const& ground_truth) {
     return 1 - (count_different / (detected.rows * detected.cols));
 }
 
-vector<Rect> extract_bboxes(string const& txt_path, double scale_factor) {
+vector<Rect> hand_detect::extract_bboxes(string const& txt_path, double scale_factor) {
     CV_Assert(scale_factor > 0);
 
     ifstream boxes_txt = ifstream(txt_path);
@@ -65,7 +66,7 @@ vector<Rect> extract_bboxes(string const& txt_path, double scale_factor) {
     return boxes;
 }
 
-void show_bboxes(string const& img_path, string const& txt_path) {
+void hand_detect::show_bboxes(string const& img_path, string const& txt_path) {
     Mat input = imread(img_path);
     vector<Rect> boxes = extract_bboxes(txt_path);
 
@@ -76,7 +77,7 @@ void show_bboxes(string const& img_path, string const& txt_path) {
     waitKey(0);
 }
 
-void drawGrabcutMask(Mat const& image, Mat const& mask, Mat& output, float transparency_level) {
+void hand_detect::drawGrabcutMask(Mat const& image, Mat const& mask, Mat& output, float transparency_level) {
     CV_Assert(transparency_level <= 1 && transparency_level >= 0);
     Scalar FG_COLOR{255, 255, 255};
     Scalar PROB_FG_COLOR{0,255,0};
@@ -95,23 +96,7 @@ void drawGrabcutMask(Mat const& image, Mat const& mask, Mat& output, float trans
     addWeighted(image, transparency_level, colored_mask, 1-transparency_level, 0, output);
 }
 
-void gradient_mag(cv::Mat& input, cv::Mat& magnitude) {
-    CV_Assert(input.type() == CV_8UC1);
-
-    Mat dx = Mat{input.size(), CV_32F};
-    Mat dy = dx.clone();
-    Mat abs_dx, abs_dy;
-
-    spatialGradient(input, dx, dy);
-    Mat mag{dx.size(), CV_32F};
-    //use L1 approximation of gradient magnitude
-    convertScaleAbs(dx, abs_dx);
-    convertScaleAbs(dy, abs_dy);
-
-    addWeighted(abs_dx, 0.5, abs_dy, 0.5, 0, magnitude);
-}
-
-double avg_IoU_score(vector<Rect> &detected, vector<Rect> &ground_truth, double threshold) {
+double hand_detect::avg_IoU_score(vector<Rect> &detected, vector<Rect> &ground_truth, double threshold) {
     struct Score {
         double IoU = 0;
         int det_index = -1;
@@ -179,7 +164,7 @@ double avg_IoU_score(vector<Rect> &detected, vector<Rect> &ground_truth, double 
     return avg_IoU;
 }
 
-bool is_monochromatic(cv::Mat const& input) {
+bool hand_detect::is_monochromatic(cv::Mat const& input) {
     CV_Assert(input.type() == CV_8UC3);
     Mat hsv;
     cvtColor(input, hsv, COLOR_BGR2HSV_FULL);
@@ -193,7 +178,7 @@ bool is_monochromatic(cv::Mat const& input) {
     return (count0 + count1 == 0);
 }
 
-void loadImages(vector<Mat>& images, string const& folder_path, vector<std::string>& images_names) {
+void hand_detect::loadImages(vector<Mat>& images, string const& folder_path, vector<std::string>& images_names) {
     vector<std::string> img_names;
     glob(folder_path, img_names, false);
 
@@ -205,11 +190,22 @@ void loadImages(vector<Mat>& images, string const& folder_path, vector<std::stri
     }
 }
 
-void loadBoundingBoxes(vector<vector<Rect>> &bounding_boxes, string const& folder_path) {
+void hand_detect::loadBoundingBoxes(vector<vector<Rect>> &bounding_boxes, string const& folder_path) {
     vector<std::string> file_names;
     glob(folder_path, file_names, false);
 
     for (String& file_name : file_names) {
         bounding_boxes.push_back(extract_bboxes(file_name));
     }
+}
+
+void hand_detect::crop_bboxes(cv::Mat const& input, cv::Rect& box) {
+    if(box.x < 0)
+        box.x = 0;
+    if(box.y < 0)
+        box.y = 0;
+    if(input.cols < (box.x + box.width))
+        box.width = input.cols - box.x ;
+    if(input.rows < (box.y + box.height))
+        box.height = input.rows - box.y ;
 }

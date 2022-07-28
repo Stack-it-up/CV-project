@@ -6,11 +6,8 @@
 #define SNAKES_H
 
 #include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
 #include <string>
 #include <vector>
-#include <iostream>
 
 /**
  * Implements the snakes active contour algorithm as described by Gonzalez and Woods in the book Digital Image Processing.

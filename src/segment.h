@@ -1,5 +1,5 @@
 //
-// Created by filippo on 27/07/22.
+// Header for the segmentation module.
 //
 
 #ifndef HAND_DETECT_SEGMENT_H
