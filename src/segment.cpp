@@ -21,11 +21,12 @@ void hand_detect::segment(Mat const& input, Mat& output, string const& bboxes_pa
     namedWindow(winname, WINDOW_NORMAL);
 
     //scale factors for bounding boxes
-    constexpr double scale_XXL = 4;
+    constexpr double scale_XXL = 5;
+    constexpr double scale_M = 1.1;
     constexpr double scale_XXS = 0.7;
 
     ////// Extract and save bounding boxes ////////
-    vector<Rect> boxes_M = extract_bboxes(bboxes_path);
+    vector<Rect> boxes_M = extract_bboxes(bboxes_path, scale_M);
     vector<Rect> boxes_XXL = extract_bboxes(bboxes_path, scale_XXL);
     vector<Rect> boxes_XXS = extract_bboxes(bboxes_path, scale_XXS);
 
