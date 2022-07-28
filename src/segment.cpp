@@ -159,7 +159,7 @@ void hand_detect::segmentation_demo() {
 
     double accuracy_accumulator = 0;
 
-    for(int i=15; i<photos_paths.size(); i++) {
+    for(int i=0; i<photos_paths.size(); i++) {
         const Mat input = imread(photos_paths[i], IMREAD_COLOR);
         const Mat ground_truth_mask = imread(masks_paths[i], IMREAD_GRAYSCALE);
         Mat output;
