@@ -63,8 +63,19 @@ namespace hand_detect {
  */
     void crop_bboxes(cv::Mat const& input, cv::Rect &box);
 
+    /**
+     * Load .jpg images and names from a given folder
+     * @param images
+     * @param folder_path
+     * @param images_names
+     */
     void loadImages(std::vector<cv::Mat> &images, std::string const &folder_path, std::vector<std::string> &images_names);
 
+    /**
+     * Load.txt bounding boxes from given folder
+     * @param bounding_boxes
+     * @param folder_path
+     */
     void loadBoundingBoxes(std::vector<std::vector<cv::Rect>> &bounding_boxes, std::string const &folder_path);
 }
 #endif //UTIL_H

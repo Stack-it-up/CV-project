@@ -21,12 +21,23 @@ namespace hand_detect {
                 std::vector<float>& output_conf,
                 bool show_image=false);
 
+    /**
+     * Performs hand detection given networks and image. Optionally, shows the detected bounding boxes over the image.
+     * @param nets vector of networks
+     * @param input input image
+     * @param output_bb vector of detected bounding boxes
+     * @param output_conf vector of confidences for each bounding box
+     * @param show_image when true shows the input image with detected bounding boxes
+     */
     void detect(std::vector<cv::dnn::Net> const& nets,
                 cv::Mat const& input,
                 std::vector<cv::Rect>& output_bb,
                 std::vector<float>& output_conf,
                 bool show_image=false);
 
+    /**
+     * Performs detection on the whole test dataset and computes average IoU score
+     */
     void detection_demo();
 }
 
