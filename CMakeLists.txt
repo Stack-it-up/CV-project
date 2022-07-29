@@ -11,7 +11,7 @@ add_library( snakes STATIC lib/snakes.h src/lib/snakes.cpp )
 add_library( detect STATIC src/detect.h src/detect.cpp )
 add_library( segment STATIC src/segment.h src/segment.cpp )
 
-add_executable( create_decolored_samples src/create_decolored_samples.cpp )
+add_executable( create_decolored_samples dataset_processing/create_decolored_samples.cpp)
 add_executable( hand_detect src/main.cpp )
 
 target_link_libraries( hand_detect segment detect util detector ${OpenCV_LIBS} )
