@@ -77,19 +77,20 @@ void compute_snake(vector<Point> & contour, Mat const& ext_force_x, Mat const& e
             int x_coord = cvRound(x_t.at<double>(i));
             if(x_coord < 0)
                 x_coord = 0;
-            else if(x_coord > ext_force_x.cols)
+            else if(x_coord >= ext_force_x.cols)
                 x_coord = ext_force_x.cols-1;
             int y_coord = cvRound(y_t.at<double>(i));
             if(y_coord < 0)
                 y_coord = 0;
-            else if(y_coord > ext_force_x.rows)
-                y_coord = ext_force_x.rows-1;
+            else if(y_coord >= ext_force_y.rows)
+                y_coord = ext_force_y.rows-1;
 
 
             Fx.at<double>(i) = ext_force_x.at<double>(y_coord, x_coord);
             Fy.at<double>(i) = ext_force_y.at<double>(y_coord, x_coord);
         }
         //compute the new vector
+        //NB operator* performs matrix multiplication!
         x_t = A * (x_t + gamma*Fx);
         y_t = A * (y_t + gamma*Fy);
     }
@@ -132,12 +133,12 @@ void MOG(Mat const& input, Mat& output_x, Mat& output_y) {
 }
 
 void VFC(Mat const& input, Mat& output_x, Mat& output_y, int k, double gamma) {
-    CV_Assert(k%2 == 1); //we nee an odd-sized kernel!
+    CV_Assert(k%2 == 1); //we need an odd-sized kernel!
     CV_Assert(gamma>0);
     constexpr double EPSILON = 1e-05;
 
     Mat mag{input.size(), CV_64FC1};
-    CV_Assert(input.type() == CV_8UC1);
+    CV_Assert(input.type() == CV_8UC1); //TODO can we relax this constraint?
 
 
     Mat dx = Mat{input.size(), CV_64F};
@@ -189,7 +190,7 @@ void VFC(Mat const& input, Mat& output_x, Mat& output_y, int k, double gamma) {
     //normalize the force using L1 norm (cfr. Gonzalez 11-49)
     Mat L2{output_x.size(), CV_64FC1};
     magnitude(output_x, output_y, L2);
-    L2 += 1e-05;
+    L2 += 1e-05; //avoid division by zero
     output_x = -output_x / L2;
     output_y = -output_y / L2;
 }
